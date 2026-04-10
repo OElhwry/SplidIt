@@ -34,9 +34,24 @@ export default function App() {
     if (data) {
       try {
         const parsed = JSON.parse(atob(data));
-        setPeople(parsed.people);
+
+        const peopleWithPercent = parsed.people.map(p => ({
+          ...p,
+          percent: p.percent ?? 0
+        }));
+
+        setPeople(peopleWithPercent);
         setAmount(parsed.amount);
         setDescription(parsed.description);
+
+
+        if (parsed.mode) {
+          setMode(parsed.mode);
+        } else {
+          const hasCustomPercent = peopleWithPercent.some(p => Number(p.percent) > 0);
+          setMode(hasCustomPercent ? "manual" : "equal");
+        }
+
       } catch {}
     }
   }, []);
@@ -53,6 +68,32 @@ export default function App() {
       { id: Date.now(), name: nextLetter, paid: "", percent: 0 }
     ]);
   };
+
+  const fillRemaining = () => {
+  const totalUsed = people.reduce(
+    (sum, p) => sum + (Number(p.percent) || 0),
+    0
+  );
+
+  const remaining = 100 - totalUsed;
+
+  const emptyUsers = people.filter(
+    (p) => !p.percent || Number(p.percent) === 0
+  );
+
+  if (emptyUsers.length === 0) return;
+
+  const split = remaining / emptyUsers.length;
+
+  const updated = people.map((p) => {
+    if (!p.percent || Number(p.percent) === 0) {
+      return { ...p, percent: split.toFixed(2) };
+    }
+    return p;
+  });
+
+  setPeople(updated);
+};
 
   const copyText = () => {
     let text = `💸 ${description || "Expense"}\n`;
@@ -80,7 +121,7 @@ export default function App() {
   };
 
   const copyLink = () => {
-    const data = { people, amount, description };
+    const data = { people, amount, description, mode }
     const encoded = btoa(JSON.stringify(data));
     const url = `${window.location.origin}?data=${encoded}`;
     navigator.clipboard.writeText(url);
@@ -194,6 +235,12 @@ export default function App() {
               </div>
             );
           })}
+
+          {mode === "manual" && (
+            <button className="add-btn" onClick={fillRemaining}>
+              Auto-fill remaining %
+            </button>
+          )}
 
           <button className="add-btn" onClick={addPerson}>
             + Add Person
