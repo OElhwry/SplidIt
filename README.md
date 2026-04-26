@@ -1,9 +1,9 @@
 <h1 align="center">
-  <a href="https://oelhwry.github.io/Kvit/">
-    <img src="split-expense-app/public/kvit.png" width="64" alt="Kvit">
+  <a href="https://oelhwry.github.io/SplidIt/">
+    <img src="split-expense-app/public/splidit.png" width="64" alt="SplidIt">
   </a>
   <br>
-  Kvit
+  SplidIt
 </h1>
 
 <p align="center">
@@ -13,7 +13,7 @@
 </p>
 
 <p align="center">
-  <a href="https://oelhwry.github.io/Kvit/"><img src="https://img.shields.io/badge/live-oelhwry.github.io%2FKvit-34d399?style=for-the-badge" alt="Live"></a>
+  <a href="https://oelhwry.github.io/SplidIt/"><img src="https://img.shields.io/badge/live-oelhwry.github.io%2FSplidIt-34d399?style=for-the-badge" alt="Live"></a>
   <img src="https://img.shields.io/badge/version-1.0.0-6ee7b7?style=for-the-badge" alt="Version 1.0.0">
   <img src="https://img.shields.io/badge/no%20account-required-10b981?style=for-the-badge" alt="No account required">
   <img src="https://img.shields.io/badge/license-MIT-737373?style=for-the-badge" alt="MIT">
@@ -139,7 +139,7 @@ State auto-saves to `localStorage` on every change (debounced 250ms) and rehydra
 <tr>
   <td><b>Persistence</b></td>
   <td><code>localStorage</code> + URL params</td>
-  <td>Versioned key (<code>kvit:state:v1</code>), debounced writes, base64 URL state for sharing</td>
+  <td>Versioned key (<code>splidit:state:v1</code>), debounced writes, base64 URL state for sharing</td>
 </tr>
 </table>
 
@@ -150,7 +150,7 @@ SplitFare/
 ├── docs/                          # design notes
 └── split-expense-app/             # the SPA
     ├── public/
-    │   └── kvit.png               # icon / favicon
+    │   └── splidit.png            # icon / favicon
     └── src/
         ├── App.jsx                # entire app — components, CSS, logic
         └── main.jsx               # React entry
@@ -178,12 +178,12 @@ dist/assets/html2canvas.js    ~47KB gz   ← lazy-loaded on Image export only
 
 ```bash
 # 1. Install
-git clone https://github.com/OElhwry/Kvit.git
-cd Kvit/split-expense-app
+git clone https://github.com/OElhwry/SplidIt.git
+cd SplidIt/split-expense-app
 npm install
 
 # 2. Run
-npm run dev      # → http://localhost:5173/Kvit/
+npm run dev      # → http://localhost:5173/SplidIt/
 ```
 
 ### Production build
@@ -193,7 +193,7 @@ npm run build    # → split-expense-app/dist (split into 2 chunks)
 npm run preview  # local preview of the built bundle
 ```
 
-The Vite config sets `base: '/Kvit/'` so the static build deploys cleanly to GitHub Pages under `/Kvit/`.
+The Vite config sets `base: '/SplidIt/'` so the static build deploys cleanly to GitHub Pages under `/SplidIt/`.
 
 ### Useful scripts
 
@@ -212,7 +212,7 @@ npm run preview  # Preview the prod build locally
 | 🖥️ **Your device only** (`localStorage`) | The split you're working on — people, amounts, durations, mode |
 | 🔗 **In a URL** *(only if you share a link)* | Base64-encoded state in `?data=...` — encrypted in transit, never sent to any server |
 | ❌ **Never collected** | Account info, analytics, telemetry, cookies, third-party trackers |
-| 🤝 **Third parties** | None — Kvit talks to nothing. Static site, zero network traffic beyond the initial HTML/JS load. |
+| 🤝 **Third parties** | None — SplidIt talks to nothing. Static site, zero network traffic beyond the initial HTML/JS load. |
 
 Reset state with the **Clear & start fresh** button at the bottom of the app. It clears `localStorage` and strips any `?data=...` from the URL.
 
@@ -257,8 +257,8 @@ This project — every line of JSX, the calculation logic, the CSS, the motion c
 ---
 
 <p align="center">
-  <a href="https://oelhwry.github.io/Kvit/"><b>oelhwry.github.io/Kvit</b></a> ·
-  <a href="https://github.com/OElhwry/Kvit"><b>GitHub</b></a>
+  <a href="https://oelhwry.github.io/SplidIt/"><b>oelhwry.github.io/SplidIt</b></a> ·
+  <a href="https://github.com/OElhwry/SplidIt"><b>GitHub</b></a>
 </p>
 
 <p align="center">

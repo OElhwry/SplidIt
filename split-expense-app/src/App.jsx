@@ -18,10 +18,10 @@ import {
   calcSettlements,
 } from "./lib/calc";
 
-const STORAGE_KEY = "kvit:state:v1";
+const STORAGE_KEY = "splidit:state:v1";
 
 // ════════════════════════════════════════════════════════════════
-//  KVIT — "Call it even."
+//  SPLIDIT — "Call it even."
 //
 //  Palette (emerald-on-dark fintech, matching portfolio page):
 //    #060c08  page base
@@ -97,7 +97,7 @@ h1, h2, h3 { font-family: var(--font); font-size: inherit; font-weight: inherit;
   overflow-x: hidden;
 }
 
-/* layered radial gradients — same vibe as portfolio Kvit page */
+/* layered radial gradients — same vibe as portfolio SplidIt page */
 .kv-bg {
   position: fixed; inset: 0; z-index: 0; pointer-events: none;
   background:
@@ -961,25 +961,71 @@ const AVATAR_COLORS = [
 ];
 const DEFAULT_NAMES = ["Alice", "Bob", "Cara", "Dom", "Eli", "Fae", "Gus", "Hari"];
 
+// ── Sample data per mode ─────────────────────────────────────
+// "Try with sample data" loads the scenario for the current mode
+// rather than forcing the user into By Time. Each sample also carries
+// the label the hero CTA shows so the button self-describes.
+const SAMPLES = {
+  equal: {
+    description: "Sushi night",
+    amount: "84",
+    bookingDuration: "",
+    people: [
+      { id: 1, name: "Alice", paid: "84", percent: 0, minutes: 0 },
+      { id: 2, name: "Bob",   paid: "",   percent: 0, minutes: 0 },
+      { id: 3, name: "Cara",  paid: "",   percent: 0, minutes: 0 },
+      { id: 4, name: "Dom",   paid: "",   percent: 0, minutes: 0 },
+    ],
+    ctaLabel:   "Try a sample dinner",
+    toastLabel: "sushi night, £84",
+  },
+  manual: {
+    description: "Birthday dinner",
+    amount: "120",
+    bookingDuration: "",
+    people: [
+      { id: 1, name: "Alice", paid: "120", percent: 40, minutes: 0 },
+      { id: 2, name: "Bob",   paid: "",    percent: 30, minutes: 0 },
+      { id: 3, name: "Cara",  paid: "",    percent: 20, minutes: 0 },
+      { id: 4, name: "Dom",   paid: "",    percent: 10, minutes: 0 },
+    ],
+    ctaLabel:   "Try a weighted split",
+    toastLabel: "birthday dinner · 40 / 30 / 20 / 10",
+  },
+  time: {
+    description: "Saturday padel",
+    amount: "48",
+    bookingDuration: "90",
+    people: [
+      { id: 1, name: "Alice", paid: "48", percent: 0, minutes: 90 },
+      { id: 2, name: "Bob",   paid: "",   percent: 0, minutes: 90 },
+      { id: 3, name: "Cara",  paid: "",   percent: 0, minutes: 60 },
+      { id: 4, name: "Dom",   paid: "",   percent: 0, minutes: 45 },
+    ],
+    ctaLabel:   "Try a padel session",
+    toastLabel: "Saturday padel · 90 min",
+  },
+};
+
 // ═════════════════════════════════════════════════════════════
-//  LOGO MARK — split-K with a deliberate gap
+//  LOGO MARK — split-then-settled equals sign
+//    top bar broken into two pieces (the split)
+//    bottom bar whole (call it even)
 // ═════════════════════════════════════════════════════════════
-function KvitMark({ size = 22 }) {
-  const h = size;
-  const w = size * 0.88;
-  const barW  = w * 0.22;
-  const gapY  = h * 0.5;
-  const split = h * 0.11;
-  const arm1Y = gapY - split;
-  const arm2Y = gapY + split;
+function SplidItMark({ size = 22 }) {
+  const s = size;
+  const barH = s * 0.16;
+  const topYc = s * 0.34;
+  const botYc = s * 0.66;
+  const gapX = s * 0.18;
+  const halfW = (s - gapX) / 2;
+  const fill = "rgba(255,255,255,0.96)";
 
   return (
-    <svg width={w} height={h} viewBox={`0 0 ${w} ${h}`} fill="none">
-      <rect x="0" y="0" width={barW} height={h} rx={barW / 2} fill="rgba(255,255,255,0.96)" />
-      <line x1={barW + 1} y1={arm1Y} x2={w} y2={1}
-        stroke="rgba(255,255,255,0.94)" strokeWidth={barW * 0.85} strokeLinecap="round" />
-      <line x1={barW + 1} y1={arm2Y} x2={w} y2={h - 1}
-        stroke="rgba(255,255,255,0.94)" strokeWidth={barW * 0.85} strokeLinecap="round" />
+    <svg width={s} height={s} viewBox={`0 0 ${s} ${s}`} fill="none">
+      <rect x="0"             y={topYc - barH / 2} width={halfW} height={barH} rx={barH / 2} fill={fill} />
+      <rect x={halfW + gapX}  y={topYc - barH / 2} width={halfW} height={barH} rx={barH / 2} fill={fill} />
+      <rect x="0"             y={botYc - barH / 2} width={s}     height={barH} rx={barH / 2} fill={fill} />
     </svg>
   );
 }
@@ -1038,7 +1084,8 @@ function Reveal({ children, delay = 0, y = 18 }) {
 // ═════════════════════════════════════════════════════════════
 //  COMPONENT: Hero
 // ═════════════════════════════════════════════════════════════
-function Hero({ onSample, total, showHint }) {
+function Hero({ onSample, total, showHint, mode }) {
+  const ctaLabel = (SAMPLES[mode] || SAMPLES.equal).ctaLabel;
   return (
     <header className="kv-hero">
       <motion.div
@@ -1047,7 +1094,7 @@ function Hero({ onSample, total, showHint }) {
         transition={{ duration: 0.6, ease: [0.32, 0.72, 0.24, 1] }}
         className="kv-hero-mark"
       >
-        <KvitMark size={28} />
+        <SplidItMark size={28} />
       </motion.div>
 
       <motion.h1
@@ -1056,7 +1103,7 @@ function Hero({ onSample, total, showHint }) {
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.55, delay: 0.08 }}
       >
-        Kvit
+        SplidIt
       </motion.h1>
 
       <motion.p
@@ -1141,7 +1188,18 @@ function Hero({ onSample, total, showHint }) {
           whileTap={{ scale: 0.96 }}
         >
           <Sparkles size={14} />
-          Try with sample data
+          <AnimatePresence mode="wait" initial={false}>
+            <motion.span
+              key={ctaLabel}
+              initial={{ opacity: 0, y: 4 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -4 }}
+              transition={{ duration: 0.18 }}
+              style={{ display: "inline-block" }}
+            >
+              {ctaLabel}
+            </motion.span>
+          </AnimatePresence>
         </motion.button>
       </div>
 
@@ -1737,10 +1795,10 @@ const ShareCard = forwardRef(function ShareCard(
     <div className="kv-share" ref={ref}>
       {/* Header: brand + description */}
       <div className="kv-share-hdr">
-        <div className="kv-share-mark"><KvitMark size={20} /></div>
+        <div className="kv-share-mark"><SplidItMark size={20} /></div>
         <div>
           <div className="kv-share-brand">
-            Kvit <span className="kv-share-brand-dot" />
+            SplidIt <span className="kv-share-brand-dot" />
           </div>
           <div className="kv-share-desc">{description || "Untitled split"}</div>
         </div>
@@ -1843,7 +1901,7 @@ const ShareCard = forwardRef(function ShareCard(
       {/* Footer */}
       <div className="kv-share-foot">
         <span className="kv-share-foot-brand">
-          <span className="kv-share-brand-dot" /> KVIT
+          <span className="kv-share-brand-dot" /> SPLIDIT
         </span>
         <span className="kv-share-foot-tag">CALL · IT · EVEN</span>
       </div>
@@ -1993,17 +2051,12 @@ export default function App() {
   // ── sample data — for hero CTA ───────────────────────────
   const loadSample = () => {
     setShowHint(false);
-    setMode("time");
-    setBookingDuration("90");
-    setAmount("48");
-    setDescription("Saturday padel");
-    setPeople([
-      { id: 1, name: "Alice", paid: "48", percent: 0, minutes: 90 },
-      { id: 2, name: "Bob",   paid: "",   percent: 0, minutes: 90 },
-      { id: 3, name: "Cara",  paid: "",   percent: 0, minutes: 60 },
-      { id: 4, name: "Dom",   paid: "",   percent: 0, minutes: 45 },
-    ]);
-    showToast("Loaded sample · Saturday padel");
+    const s = SAMPLES[mode] || SAMPLES.equal;
+    setBookingDuration(s.bookingDuration);
+    setAmount(s.amount);
+    setDescription(s.description);
+    setPeople(s.people.map(p => ({ ...p })));
+    showToast(`Loaded · ${s.toastLabel}`);
     setTimeout(() => {
       const target = document.getElementById("kv-builder");
       if (target) target.scrollIntoView({ behavior: "smooth", block: "start" });
@@ -2082,7 +2135,7 @@ export default function App() {
       />
 
       <div className="kv-wrap">
-        <Hero onSample={loadSample} total={total} showHint={showHint} />
+        <Hero onSample={loadSample} total={total} showHint={showHint} mode={mode} />
 
         <div id="kv-builder" />
 
@@ -2270,8 +2323,8 @@ export default function App() {
         </Reveal>
 
         <footer className="kv-footer">
-          KVIT · CALL IT EVEN ·{" "}
-          <a href="https://github.com/OElhwry/Kvit" target="_blank" rel="noreferrer">GITHUB</a>
+          SPLIDIT · CALL IT EVEN ·{" "}
+          <a href="https://github.com/OElhwry/SplidIt" target="_blank" rel="noreferrer">GITHUB</a>
         </footer>
       </div>
 

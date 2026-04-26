@@ -1,5 +1,5 @@
 // ════════════════════════════════════════════════════════════════
-//  Kvit — pure math
+//  SplidIt — pure math
 //
 //  Pure, side-effect-free splitting and settlement helpers. Kept
 //  here (rather than inline in App.jsx) so they can be unit-tested
