@@ -1474,10 +1474,13 @@ function TimePersonRow({ person, index, onUpdate, bookingDuration, owes, timeSha
 //  COMPONENT: ParticipationTimeline
 // ═════════════════════════════════════════════════════════════
 function ParticipationTimeline({ people, bookingDuration, total }) {
-  const totalMin    = Number(bookingDuration) || 0;
-  const denominator = totalMin > 0
+  const totalMin = Number(bookingDuration) || 0;
+  // bar widths show each person's fraction of the SESSION (cap at 100%)
+  const barDenom   = totalMin > 0
     ? totalMin
     : people.reduce((s, p) => s + (Number(p.minutes) || 0), 0);
+  // cost share denominator is total person-minutes (so shares sum to total)
+  const shareDenom = people.reduce((s, p) => s + (Number(p.minutes) || 0), 0);
   const equalShare = people.length > 0 ? total / people.length : 0;
 
   return (
@@ -1494,7 +1497,7 @@ function ParticipationTimeline({ people, bookingDuration, total }) {
 
       {people.map((p, i) => {
         const mins  = Number(p.minutes) || 0;
-        const pct   = denominator > 0 ? Math.min((mins / denominator) * 100, 100) : 0;
+        const pct   = barDenom > 0 ? Math.min((mins / barDenom) * 100, 100) : 0;
         const color = AVATAR_COLORS[i % AVATAR_COLORS.length];
 
         return (
@@ -1522,12 +1525,12 @@ function ParticipationTimeline({ people, bookingDuration, total }) {
         );
       })}
 
-      {total > 0 && denominator > 0 && (
+      {total > 0 && shareDenom > 0 && (
         <div className="kv-fi">
           <span className="kv-fi-lbl">vs equal £{equalShare.toFixed(2)}</span>
           {people.map((p, i) => {
             const mins      = Number(p.minutes) || 0;
-            const timeShare = (total * mins) / denominator;
+            const timeShare = (total * mins) / shareDenom;
             const diff      = equalShare - timeShare;
             const absDiff   = Math.abs(diff);
             const cls  = absDiff < 0.05 ? "even" : diff > 0 ? "save" : "more";
@@ -1945,13 +1948,13 @@ export default function App() {
   const totalPct = people.reduce((s, p) => s + (Number(p.percent) || 0), 0);
   const pctState = totalPct > 100.05 ? "over" : totalPct >= 99.95 ? "ok" : "partial";
 
-  const timeDenominator = (() => {
-    const dur = Number(bookingDuration);
-    return dur > 0 ? dur : people.reduce((s, p) => s + (Number(p.minutes) || 0), 0);
-  })();
+  // Cost is split in proportion to each person's share of the TOTAL play-time
+  // (sum of every person's minutes), not in proportion to the booking duration.
+  // Booking duration only bounds the slider's max — multiple people can overlap.
+  const totalPersonMinutes = people.reduce((s, p) => s + (Number(p.minutes) || 0), 0);
 
   const getTimeShare = (p) =>
-    timeDenominator > 0 ? (total * (Number(p.minutes) || 0)) / timeDenominator : 0;
+    totalPersonMinutes > 0 ? (total * (Number(p.minutes) || 0)) / totalPersonMinutes : 0;
 
   const getOwes = (p) => {
     if (mode === "equal")  return total / people.length - (Number(p.paid) || 0);
