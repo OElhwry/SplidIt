@@ -1,452 +1,750 @@
 import { useState, useRef, useEffect } from "react";
 import html2canvas from "html2canvas";
-import { FileText, Link, Image as ImageIcon, Check, Plus, ArrowRight, Sun, Moon } from "lucide-react";
+import {
+  motion,
+  AnimatePresence,
+  useMotionValue,
+  useTransform,
+  animate,
+  useReducedMotion,
+} from "framer-motion";
+import {
+  FileText, Link as LinkIcon, Image as ImageIcon, Check, Plus, ArrowRight,
+  Sparkles, Clock, Scale, Percent, ChevronDown,
+} from "lucide-react";
 
 // ════════════════════════════════════════════════════════════════
-//  PARTA  —  "Clear debts. Keep friends."
+//  KVIT — "Call it even."
 //
-//  Palette (Stripe-inspired light fintech):
-//    #EEF2FA  page background
-//    #FFFFFF  card surface
-//    #5C67F5  primary  (electric violet)
-//    #10B981  green    (emerald — creditor)
-//    #F43F5E  red      (rose    — debtor)
-//    #0F172A  text     (near-black)
-//    #64748B  text-2   (secondary)
+//  Palette (emerald-on-dark fintech, matching portfolio page):
+//    #060c08  page base
+//    #0a1410  card surface tint
+//    #34d399  emerald accent  (brand · positive)
+//    #10b981  emerald deep    (hover · darker accent)
+//    #f87171  rose            (debtor · negative)
+//    #e6f4ec  text            (off-white with green tint)
+//    #94a3b8  text-2          (slate-400)
+//    #64748b  text-3          (slate-500)
 // ════════════════════════════════════════════════════════════════
 
 const CSS = `
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap');
 
 *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
 :root {
-  --bg:          #EEF2FA;
-  --surface:     #FFFFFF;
-  --surface-2:   #F7F9FC;
-  --border:      #E2E8F0;
-  --border-2:    #CBD5E1;
-  --primary:     #5C67F5;
-  --primary-dim: #EDEFFF;
-  --primary-dk:  #4852E8;
-  --green:       #10B981;
-  --green-dim:   #D1FAE5;
-  --red:         #F43F5E;
-  --red-dim:     #FFE4E8;
-  --text:        #0F172A;
-  --text-2:      #64748B;
-  --text-3:      #94A3B8;
-  --shadow-sm:   0 1px 2px rgba(15,23,42,0.06);
-  --shadow:      0 1px 3px rgba(15,23,42,0.08), 0 1px 2px rgba(15,23,42,0.04);
-  --shadow-md:   0 4px 6px -1px rgba(15,23,42,0.08), 0 2px 4px -1px rgba(15,23,42,0.04);
+  --bg:          #060c08;
+  --bg-2:        #040a06;
+  --surface:     rgba(12, 22, 16, 0.72);
+  --surface-2:   rgba(20, 32, 24, 0.55);
+  --surface-3:   rgba(28, 42, 32, 0.45);
+  --border:      rgba(52, 211, 153, 0.10);
+  --border-2:    rgba(52, 211, 153, 0.22);
+  --border-3:    rgba(52, 211, 153, 0.40);
+  --primary:     #34d399;
+  --primary-dim: rgba(52, 211, 153, 0.12);
+  --primary-dk:  #10b981;
+  --primary-glow:rgba(52, 211, 153, 0.55);
+  --green:       #34d399;
+  --green-dim:   rgba(52, 211, 153, 0.13);
+  --red:         #f87171;
+  --red-dim:     rgba(248, 113, 113, 0.12);
+  --amber:       #fbbf24;
+  --text:        #e6f4ec;
+  --text-2:      #9aa9a3;
+  --text-3:      #5d6e66;
+  --shadow-sm:   0 1px 2px rgba(0,0,0,0.4);
+  --shadow:      0 4px 14px rgba(0,0,0,0.42), 0 1px 2px rgba(0,0,0,0.35);
+  --shadow-md:   0 8px 22px rgba(0,0,0,0.5), 0 2px 6px rgba(0,0,0,0.4);
+  --shadow-glow: 0 0 24px rgba(52, 211, 153, 0.18);
   --font:        'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
   --mono:        'JetBrains Mono', ui-monospace, Consolas, monospace;
 }
 
-/* ── RESET conflicting index.css styles ───────────────────── */
-html, body { background: var(--bg) !important; color: var(--text) !important; }
+/* ── RESET ─────────────────────────────────────────────────── */
+html, body {
+  background: var(--bg) !important;
+  color: var(--text) !important;
+  overflow-x: hidden;
+}
 body {
   font-family: var(--font); font-size: 14px; line-height: 1.5;
   -webkit-font-smoothing: antialiased; -moz-osx-font-smoothing: grayscale;
+  font-feature-settings: "tnum" on, "lnum" on;
 }
+::selection { background: var(--primary); color: #052e1f; }
 #root {
   width: auto !important; max-width: 100% !important;
   border: none !important; border-inline: none !important;
   text-align: left !important; display: block !important;
   background: transparent !important; min-height: 100vh;
 }
-h1, h2 { font-family: var(--font); font-size: inherit; font-weight: inherit; color: inherit; letter-spacing: inherit; margin: 0; }
+h1, h2, h3 { font-family: var(--font); font-size: inherit; font-weight: inherit; color: inherit; letter-spacing: inherit; margin: 0; }
 
-/* ── PAGE ─────────────────────────────────────────────────── */
-.pt { min-height: 100vh; background: var(--bg); padding-bottom: 80px; }
-.pt-wrap { max-width: 480px; margin: 0 auto; padding: 0 16px; }
-
-/* ── HEADER ───────────────────────────────────────────────── */
-.pt-header { text-align: center; padding: 48px 0 32px; }
-.pt-logo {
-  display: inline-flex; align-items: center; gap: 10px; margin-bottom: 10px;
-}
-.pt-mark {
-  width: 40px; height: 40px; border-radius: 12px;
-  background: linear-gradient(140deg, #5C67F5 0%, #8B5CF6 55%, #A78BFA 100%);
-  display: flex; align-items: center; justify-content: center;
-  box-shadow: 0 4px 16px rgba(92,103,245,0.38);
-  flex-shrink: 0; overflow: hidden;
-}
-.pt.dark .pt-mark { box-shadow: 0 4px 22px rgba(92,103,245,0.55); }
-.pt-wordmark { font-size: 22px; font-weight: 700; color: var(--text); letter-spacing: -0.6px; }
-.pt-tagline  { font-size: 14px; color: var(--text-2); }
-
-/* ── SECTION LABEL ────────────────────────────────────────── */
-.pt-lbl {
-  font-size: 11px; font-weight: 600; letter-spacing: 0.09em;
-  text-transform: uppercase; color: var(--text-3);
-  margin: 0 0 8px 1px;
+/* ── PAGE BASE ─────────────────────────────────────────────── */
+.kv {
+  position: relative;
+  min-height: 100vh;
+  background: var(--bg);
+  padding-bottom: 96px;
+  overflow-x: hidden;
 }
 
-/* ── CARD ─────────────────────────────────────────────────── */
-.pt-card {
+/* layered radial gradients — same vibe as portfolio Kvit page */
+.kv-bg {
+  position: fixed; inset: 0; z-index: 0; pointer-events: none;
+  background:
+    radial-gradient(ellipse 85% 50% at 50% 0%,  rgba(16,185,129,0.12) 0%, transparent 65%),
+    radial-gradient(ellipse 60% 40% at 90% 70%, rgba(5,150,105,0.07) 0%, transparent 70%),
+    radial-gradient(ellipse 50% 30% at 8% 92%,  rgba(34,197,94,0.05) 0%, transparent 70%);
+}
+/* dot-grid overlay */
+.kv-dots {
+  position: fixed; inset: 0; z-index: 0; pointer-events: none;
+  background-image: radial-gradient(circle, rgba(52,211,153,0.07) 1px, transparent 1px);
+  background-size: 28px 28px;
+  mask-image: radial-gradient(ellipse 80% 70% at 50% 30%, black 30%, transparent 100%);
+  -webkit-mask-image: radial-gradient(ellipse 80% 70% at 50% 30%, black 30%, transparent 100%);
+}
+/* cursor follow glow */
+.kv-glow {
+  position: fixed; inset: 0; z-index: 0; pointer-events: none;
+  transition: background 0.08s linear;
+}
+
+.kv-wrap {
+  position: relative; z-index: 1;
+  max-width: 520px; margin: 0 auto; padding: 0 18px;
+}
+
+/* ── HERO ──────────────────────────────────────────────────── */
+.kv-hero { padding: 64px 0 48px; text-align: center; }
+.kv-hero-mark {
+  width: 56px; height: 56px; border-radius: 16px;
+  background: linear-gradient(140deg, #34d399 0%, #10b981 50%, #047857 100%);
+  display: inline-flex; align-items: center; justify-content: center;
+  box-shadow:
+    0 8px 32px rgba(52,211,153,0.32),
+    inset 0 1px 0 rgba(255,255,255,0.18);
+  margin-bottom: 18px;
+  position: relative;
+}
+.kv-hero-mark::after {
+  content: ""; position: absolute; inset: -2px; border-radius: 18px;
+  background: linear-gradient(140deg, rgba(52,211,153,0.4), transparent 60%);
+  z-index: -1; filter: blur(12px);
+}
+.kv-hero-title {
+  font-size: 56px; font-weight: 800; letter-spacing: -2.5px;
+  background: linear-gradient(180deg, #f0fdf4 0%, #86efac 100%);
+  -webkit-background-clip: text; background-clip: text;
+  -webkit-text-fill-color: transparent;
+  line-height: 1; margin-bottom: 14px;
+}
+.kv-hero-tag {
+  font-family: var(--mono); font-size: 13px; font-weight: 500;
+  color: rgba(52,211,153,0.75); letter-spacing: 0.04em;
+  margin-bottom: 22px;
+}
+
+.kv-hero-pills {
+  display: flex; gap: 6px; justify-content: center; flex-wrap: wrap;
+  margin-bottom: 24px;
+}
+.kv-hero-pill {
+  display: inline-flex; align-items: center; gap: 5px;
+  padding: 5px 11px; border-radius: 99px;
+  background: rgba(52,211,153,0.07);
+  border: 1px solid rgba(52,211,153,0.15);
+  font-size: 11px; font-weight: 500; color: rgba(230,244,236,0.78);
+  backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px);
+}
+.kv-hero-pill .dot {
+  width: 6px; height: 6px; border-radius: 50%;
+  background: var(--primary); box-shadow: 0 0 8px var(--primary);
+  animation: pulse 2s ease-in-out infinite;
+}
+@keyframes pulse {
+  0%, 100% { opacity: 1;   transform: scale(1);    }
+  50%      { opacity: 0.55;transform: scale(0.85); }
+}
+
+.kv-hero-cta {
+  display: inline-flex; align-items: center; gap: 8px;
+  height: 42px; padding: 0 20px; border-radius: 99px;
+  background: linear-gradient(135deg, rgba(52,211,153,0.18), rgba(52,211,153,0.08));
+  border: 1px solid rgba(52,211,153,0.32);
+  color: #6ee7b7; font-family: var(--font); font-size: 13px; font-weight: 600;
+  letter-spacing: 0.02em;
+  cursor: pointer; transition: all 0.22s cubic-bezier(0.4,0,0.2,1);
+  backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px);
+  box-shadow: 0 4px 20px rgba(52,211,153,0.12);
+}
+.kv-hero-cta:hover {
+  border-color: rgba(52,211,153,0.55); color: #d1fae5;
+  background: linear-gradient(135deg, rgba(52,211,153,0.28), rgba(52,211,153,0.12));
+  transform: translateY(-1px);
+  box-shadow: 0 8px 28px rgba(52,211,153,0.25);
+}
+.kv-hero-cta:active { transform: translateY(0) scale(0.98); }
+
+.kv-scroll-cue {
+  display: inline-flex; align-items: center; justify-content: center;
+  margin-top: 28px; color: rgba(230,244,236,0.35);
+  animation: bob 2.4s ease-in-out infinite;
+}
+@keyframes bob {
+  0%, 100% { transform: translateY(0); }
+  50%      { transform: translateY(4px); }
+}
+
+/* ── SECTION LABEL ─────────────────────────────────────────── */
+.kv-lbl {
+  font-size: 10px; font-weight: 700; letter-spacing: 0.22em;
+  text-transform: uppercase; color: rgba(52,211,153,0.55);
+  margin: 28px 0 10px 4px;
+  display: flex; align-items: center; gap: 8px;
+}
+.kv-lbl::after {
+  content: ""; flex: 1; height: 1px;
+  background: linear-gradient(90deg, rgba(52,211,153,0.18), transparent);
+}
+
+/* ── CARD (glassmorphic) ───────────────────────────────────── */
+.kv-card {
   background: var(--surface);
   border: 1px solid var(--border);
-  border-radius: 16px; padding: 20px;
-  margin-bottom: 12px; box-shadow: var(--shadow);
+  border-radius: 18px; padding: 20px;
+  margin-bottom: 12px;
+  box-shadow: var(--shadow);
+  backdrop-filter: blur(14px); -webkit-backdrop-filter: blur(14px);
+  position: relative;
+  transition: border-color 0.2s, box-shadow 0.2s;
 }
+.kv-card:hover { border-color: var(--border-2); }
 
-/* ── FIELD ────────────────────────────────────────────────── */
-.pt-field { margin-bottom: 14px; }
-.pt-field:last-of-type { margin-bottom: 0; }
-.pt-field-label {
-  display: block; font-size: 12px; font-weight: 600;
-  color: var(--text-2); margin-bottom: 6px; letter-spacing: 0.01em;
+/* ── FIELD ─────────────────────────────────────────────────── */
+.kv-field { margin-bottom: 14px; }
+.kv-field:last-of-type { margin-bottom: 0; }
+.kv-field-lbl {
+  display: block; font-size: 11px; font-weight: 600;
+  color: rgba(230,244,236,0.55);
+  margin-bottom: 7px; letter-spacing: 0.02em;
 }
-.pt-pfx-wrap { position: relative; }
-.pt-pfx {
-  position: absolute; left: 12px; top: 50%; transform: translateY(-50%);
+.kv-pfx-wrap { position: relative; }
+.kv-pfx, .kv-sfx {
+  position: absolute; top: 50%; transform: translateY(-50%);
   font-family: var(--mono); font-size: 14px; color: var(--text-3);
   pointer-events: none; user-select: none;
 }
+.kv-pfx { left: 13px; }
+.kv-sfx { right: 13px; font-size: 12px; }
 
-input.pt-inp {
-  width: 100%; height: 44px; padding: 0 12px;
-  border-radius: 9px; border: 1px solid var(--border);
-  background: var(--surface-2); color: var(--text);
+input.kv-inp {
+  width: 100%; height: 46px; padding: 0 13px;
+  border-radius: 11px; border: 1px solid var(--border);
+  background: rgba(0,0,0,0.32); color: var(--text);
   font-family: var(--font); font-size: 14px; outline: none;
-  transition: border-color 0.15s, box-shadow 0.15s, background 0.15s;
+  transition: all 0.18s cubic-bezier(0.4,0,0.2,1);
   -webkit-appearance: none; appearance: none;
+  font-feature-settings: "tnum" on;
 }
-input.pt-inp::placeholder { color: var(--text-3); }
-input.pt-inp:focus {
+input.kv-inp::placeholder { color: var(--text-3); }
+input.kv-inp:focus {
   border-color: var(--primary);
-  box-shadow: 0 0 0 3px rgba(92,103,245,0.12);
-  background: var(--surface);
+  box-shadow: 0 0 0 4px rgba(52,211,153,0.14);
+  background: rgba(0,0,0,0.4);
 }
-input.pt-inp.pl { padding-left: 26px; }
-input.pt-inp.sm { height: 38px; font-size: 13px; }
-input.pt-inp.center { text-align: center; }
+input.kv-inp.pl     { padding-left: 28px; }
+input.kv-inp.pr     { padding-right: 44px; }
+input.kv-inp.sm     { height: 38px; font-size: 13px; border-radius: 9px; }
+input.kv-inp.center { text-align: center; }
 
-/* ── MODE TOGGLE ──────────────────────────────────────────── */
-.pt-toggle {
-  display: flex; padding: 3px; border-radius: 9px;
-  background: var(--surface-2); border: 1px solid var(--border);
-  margin-top: 16px;
+/* hide number arrows */
+input[type="number"]::-webkit-outer-spin-button,
+input[type="number"]::-webkit-inner-spin-button { -webkit-appearance: none; margin: 0; }
+input[type="number"] { -moz-appearance: textfield; }
+
+/* ── MODE PICKER ───────────────────────────────────────────── */
+.kv-modes {
+  position: relative; display: grid; grid-template-columns: 1fr 1fr 1fr;
+  gap: 4px; padding: 4px;
+  background: rgba(0,0,0,0.32); border: 1px solid var(--border);
+  border-radius: 13px; margin-top: 16px;
 }
-.pt-mode {
-  flex: 1; height: 36px; border-radius: 7px; border: none;
-  font-family: var(--font); font-size: 13px; font-weight: 500;
-  color: var(--text-2); background: transparent; cursor: pointer;
-  transition: all 0.18s ease;
+.kv-mode {
+  position: relative; z-index: 2;
+  height: 44px; border-radius: 9px; border: none;
+  background: transparent; cursor: pointer;
+  display: flex; align-items: center; justify-content: center; gap: 6px;
+  font-family: var(--font); font-size: 12px; font-weight: 600;
+  color: var(--text-2); letter-spacing: 0.01em;
+  transition: color 0.22s ease;
 }
-.pt-mode.on {
-  background: var(--surface); color: var(--text); font-weight: 600;
-  box-shadow: var(--shadow-sm);
+.kv-mode.on   { color: #052e1f; }
+.kv-mode:hover:not(.on) { color: var(--text); }
+.kv-mode-ind {
+  position: absolute; inset: 0;
+  border-radius: 9px;
+  background: linear-gradient(140deg, #34d399, #10b981);
+  box-shadow: 0 2px 12px rgba(52,211,153,0.4), inset 0 1px 0 rgba(255,255,255,0.22);
+  z-index: 1;
+}
+.kv-mode-desc {
+  font-size: 11px; color: var(--text-3); text-align: center;
+  margin-top: 9px; min-height: 16px;
+  font-style: italic;
 }
 
-/* ── PEOPLE TABLE HEADER ──────────────────────────────────── */
-.pt-thead {
-  display: grid; gap: 8px; padding-bottom: 8px;
-  border-bottom: 1px solid var(--border); margin-bottom: 10px;
-  font-size: 10.5px; font-weight: 600;
-  letter-spacing: 0.07em; text-transform: uppercase; color: var(--text-3);
+/* ── PEOPLE TABLE ──────────────────────────────────────────── */
+.kv-thead {
+  display: grid; gap: 8px; padding-bottom: 9px;
+  border-bottom: 1px solid var(--border);
+  margin-bottom: 11px;
+  font-size: 10px; font-weight: 700;
+  letter-spacing: 0.18em; text-transform: uppercase;
+  color: rgba(230,244,236,0.4);
 }
-.pt-thead.eq  { grid-template-columns: 2fr 1.3fr 1.3fr; }
-.pt-thead.man { grid-template-columns: 2fr 1.1fr 0.9fr 1.2fr; }
-.pt-thead > span:not(:first-child) { text-align: center; }
-.pt-thead > span:last-child        { text-align: right; }
+.kv-thead.eq  { grid-template-columns: 2fr 1.3fr 1.3fr; }
+.kv-thead.man { grid-template-columns: 2fr 1.1fr 0.9fr 1.2fr; }
+.kv-thead > span:not(:first-child) { text-align: center; }
+.kv-thead > span:last-child        { text-align: right; }
 
-/* ── PERSON ROW ───────────────────────────────────────────── */
-.pt-row { display: grid; gap: 8px; margin-bottom: 8px; align-items: center; }
-.pt-row.eq  { grid-template-columns: 2fr 1.3fr 1.3fr; }
-.pt-row.man { grid-template-columns: 2fr 1.1fr 0.9fr 1.2fr; }
+.kv-row { display: grid; gap: 8px; margin-bottom: 8px; align-items: center; }
+.kv-row.eq  { grid-template-columns: 2fr 1.3fr 1.3fr; }
+.kv-row.man { grid-template-columns: 2fr 1.1fr 0.9fr 1.2fr; }
 
-.pt-name-cell { display: flex; align-items: center; gap: 8px; min-width: 0; }
-.pt-name-cell > input.pt-inp { flex: 1; min-width: 0; width: auto; }
+.kv-name-cell { display: flex; align-items: center; gap: 8px; min-width: 0; }
+.kv-name-cell > input.kv-inp { flex: 1; min-width: 0; width: auto; }
 
-.pt-av {
-  width: 28px; height: 28px; border-radius: 8px; flex-shrink: 0;
+.kv-av {
+  width: 30px; height: 30px; border-radius: 9px; flex-shrink: 0;
   display: flex; align-items: center; justify-content: center;
-  font-size: 11px; font-weight: 700; color: #fff;
+  font-size: 11px; font-weight: 700; color: #06140d;
+  box-shadow: inset 0 1px 0 rgba(255,255,255,0.18);
 }
 
-/* ── BALANCE PILL ─────────────────────────────────────────── */
-.pt-bal {
-  height: 38px; border-radius: 8px;
+/* ── BALANCE PILL ──────────────────────────────────────────── */
+.kv-bal {
+  height: 38px; border-radius: 9px;
   display: flex; align-items: center; justify-content: center;
-  font-family: var(--mono); font-size: 12px; font-weight: 500;
+  font-family: var(--mono); font-size: 12px; font-weight: 600;
+  letter-spacing: -0.02em;
+  font-feature-settings: "tnum" on;
 }
-.pt-bal.neg  { background: var(--red-dim);   color: var(--red);   }
-.pt-bal.pos  { background: var(--green-dim); color: var(--green); }
-.pt-bal.zero { background: var(--surface-2); color: var(--text-3); }
+.kv-bal.neg  { background: var(--red-dim);   color: var(--red);   border: 1px solid rgba(248,113,113,0.22); }
+.kv-bal.pos  { background: var(--green-dim); color: var(--green); border: 1px solid rgba(52,211,153,0.28); }
+.kv-bal.zero { background: rgba(255,255,255,0.04); color: var(--text-3); border: 1px solid var(--border); }
 
-/* ── PERCENT BAR ──────────────────────────────────────────── */
-.pt-pct {
-  display: flex; align-items: center; gap: 10px;
-  margin-top: 10px; padding: 10px 12px;
-  background: var(--surface-2); border: 1px solid var(--border); border-radius: 8px;
+/* ── PERCENT BAR ───────────────────────────────────────────── */
+.kv-pct {
+  display: flex; align-items: center; gap: 11px;
+  margin-top: 12px; padding: 11px 13px;
+  background: rgba(0,0,0,0.28); border: 1px solid var(--border); border-radius: 10px;
 }
-.pt-pct-lbl { font-size: 12px; font-weight: 500; min-width: 120px; }
-.pt-pct-track { flex: 1; height: 3px; background: var(--border); border-radius: 99px; overflow: hidden; }
-.pt-pct-fill { height: 100%; border-radius: 99px; transition: width 0.3s ease; }
-.pt-pct-fill.over    { background: var(--red); }
-.pt-pct-fill.ok      { background: var(--green); }
-.pt-pct-fill.partial { background: var(--primary); }
-.pt-pct-num { font-family: var(--mono); font-size: 12px; min-width: 40px; text-align: right; color: var(--text-2); }
+.kv-pct-lbl { font-size: 12px; font-weight: 600; min-width: 130px; }
+.kv-pct-track { flex: 1; height: 4px; background: rgba(255,255,255,0.05); border-radius: 99px; overflow: hidden; }
+.kv-pct-fill { height: 100%; border-radius: 99px; transition: width 0.4s cubic-bezier(0.4,0,0.2,1); }
+.kv-pct-fill.over    { background: var(--red); box-shadow: 0 0 8px rgba(248,113,113,0.5); }
+.kv-pct-fill.ok      { background: var(--green); box-shadow: 0 0 8px rgba(52,211,153,0.5); }
+.kv-pct-fill.partial { background: var(--primary); box-shadow: 0 0 6px rgba(52,211,153,0.3); }
+.kv-pct-num { font-family: var(--mono); font-size: 12px; min-width: 44px; text-align: right; color: var(--text-2); }
 
-/* ── PEOPLE FOOTER BUTTONS ────────────────────────────────── */
-.pt-row-btns { display: flex; gap: 8px; margin-top: 14px; }
+/* ── PEOPLE FOOTER BUTTONS ─────────────────────────────────── */
+.kv-row-btns { display: flex; gap: 8px; margin-top: 14px; }
 
-.pt-btn-ghost {
-  flex: 1; height: 38px; border-radius: 8px; border: 1px solid var(--border);
-  background: transparent; color: var(--text-2);
-  font-family: var(--font); font-size: 13px; font-weight: 500;
-  cursor: pointer; transition: all 0.15s;
-  display: flex; align-items: center; justify-content: center; gap: 5px;
+.kv-btn-ghost {
+  flex: 1; height: 40px; border-radius: 10px;
+  border: 1px solid var(--border); background: rgba(0,0,0,0.18);
+  color: var(--text-2);
+  font-family: var(--font); font-size: 12px; font-weight: 600;
+  cursor: pointer; transition: all 0.18s cubic-bezier(0.4,0,0.2,1);
+  display: flex; align-items: center; justify-content: center; gap: 6px;
+  letter-spacing: 0.01em;
 }
-.pt-btn-ghost:hover  { background: var(--surface-2); color: var(--text); border-color: var(--border-2); }
-.pt-btn-ghost:active { transform: scale(0.98); }
-
-.pt-btn-pri {
-  flex: 1; height: 38px; border-radius: 8px; border: none;
-  background: var(--primary); color: #fff;
-  font-family: var(--font); font-size: 13px; font-weight: 600;
-  cursor: pointer; transition: all 0.15s;
-  display: flex; align-items: center; justify-content: center; gap: 5px;
+.kv-btn-ghost:hover  {
+  background: rgba(52,211,153,0.07); color: var(--text);
+  border-color: var(--border-2);
 }
-.pt-btn-pri:hover  { background: var(--primary-dk); box-shadow: 0 4px 12px rgba(92,103,245,0.3); }
-.pt-btn-pri:active { transform: scale(0.98); }
+.kv-btn-ghost:active { transform: scale(0.97); }
 
-/* ── STATS STRIP ──────────────────────────────────────────── */
-.pt-stats {
+.kv-btn-pri {
+  flex: 1; height: 40px; border-radius: 10px; border: none;
+  background: linear-gradient(135deg, #34d399 0%, #10b981 100%);
+  color: #042f1d;
+  font-family: var(--font); font-size: 12px; font-weight: 700;
+  cursor: pointer; transition: all 0.18s cubic-bezier(0.4,0,0.2,1);
+  display: flex; align-items: center; justify-content: center; gap: 6px;
+  box-shadow: 0 4px 14px rgba(52,211,153,0.3), inset 0 1px 0 rgba(255,255,255,0.18);
+  letter-spacing: 0.01em;
+}
+.kv-btn-pri:hover  {
+  box-shadow: 0 8px 22px rgba(52,211,153,0.45), inset 0 1px 0 rgba(255,255,255,0.22);
+  transform: translateY(-1px);
+}
+.kv-btn-pri:active { transform: translateY(0) scale(0.98); }
+
+/* ── STATS STRIP ───────────────────────────────────────────── */
+.kv-stats {
   display: grid; grid-template-columns: 1fr 1fr 1fr;
   gap: 1px; background: var(--border);
-  border-radius: 12px; overflow: hidden;
+  border-radius: 14px; overflow: hidden;
   border: 1px solid var(--border);
-  margin-bottom: 12px; box-shadow: var(--shadow-sm);
+  margin-bottom: 12px;
+  backdrop-filter: blur(14px); -webkit-backdrop-filter: blur(14px);
 }
-.pt-stat { background: var(--surface); padding: 14px 16px; }
-.pt-stat-lbl { font-size: 11px; color: var(--text-3); font-weight: 500; margin-bottom: 3px; }
-.pt-stat-val { font-family: var(--mono); font-size: 16px; font-weight: 600; color: var(--text); }
+.kv-stat { background: var(--surface); padding: 14px 16px; }
+.kv-stat-lbl { font-size: 10px; color: rgba(230,244,236,0.42); font-weight: 600; margin-bottom: 4px; letter-spacing: 0.12em; text-transform: uppercase; }
+.kv-stat-val {
+  font-family: var(--mono); font-size: 17px; font-weight: 700; color: var(--text);
+  letter-spacing: -0.4px; font-feature-settings: "tnum" on;
+}
 
-/* ── POSITION CARDS ───────────────────────────────────────── */
-.pt-positions {
+/* ── POSITION CARDS (horizontal scroll) ────────────────────── */
+.kv-positions {
   display: flex; gap: 10px;
-  overflow-x: auto; padding-bottom: 2px; margin-bottom: 12px;
-  scrollbar-width: none;
+  overflow-x: auto; padding: 2px 0 4px; margin-bottom: 12px;
+  scrollbar-width: none; scroll-snap-type: x mandatory;
 }
-.pt-positions::-webkit-scrollbar { display: none; }
+.kv-positions::-webkit-scrollbar { display: none; }
 
-.pt-pos {
-  flex-shrink: 0; width: 150px; padding: 14px;
+.kv-pos {
+  flex-shrink: 0; width: 162px; padding: 14px;
   background: var(--surface); border: 1px solid var(--border);
-  border-radius: 12px; box-shadow: var(--shadow-sm);
+  border-radius: 13px; box-shadow: var(--shadow-sm);
+  scroll-snap-align: start;
+  backdrop-filter: blur(14px); -webkit-backdrop-filter: blur(14px);
+  transition: border-color 0.2s, transform 0.2s;
 }
-.pt-pos-top  { display: flex; align-items: center; gap: 9px; margin-bottom: 12px; }
-.pt-pos-name { font-size: 13px; font-weight: 600; color: var(--text); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-.pt-pos-paid { font-size: 11px; color: var(--text-3); margin-top: 1px; }
-.pt-pos-amt  { font-family: var(--mono); font-size: 19px; font-weight: 700; letter-spacing: -0.5px; margin-bottom: 3px; }
-.pt-pos-amt.pos  { color: var(--green); }
-.pt-pos-amt.neg  { color: var(--red); }
-.pt-pos-amt.zero { color: var(--text-3); }
-.pt-pos-role { font-size: 10.5px; font-weight: 600; letter-spacing: 0.04em; text-transform: uppercase; }
-.pt-pos-role.pos  { color: var(--green); }
-.pt-pos-role.neg  { color: var(--red); }
-.pt-pos-role.zero { color: var(--text-3); }
+.kv-pos:hover { border-color: var(--border-2); transform: translateY(-2px); }
+.kv-pos-top  { display: flex; align-items: center; gap: 9px; margin-bottom: 12px; }
+.kv-pos-name { font-size: 13px; font-weight: 600; color: var(--text); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.kv-pos-sub  { font-size: 10.5px; color: var(--text-3); margin-top: 1px; }
+.kv-pos-amt  {
+  font-family: var(--mono); font-size: 22px; font-weight: 700; letter-spacing: -0.7px;
+  margin-bottom: 4px; font-feature-settings: "tnum" on;
+}
+.kv-pos-amt.pos  { color: var(--green); }
+.kv-pos-amt.neg  { color: var(--red); }
+.kv-pos-amt.zero { color: var(--text-3); }
+.kv-pos-role { font-size: 10px; font-weight: 700; letter-spacing: 0.16em; text-transform: uppercase; }
+.kv-pos-role.pos  { color: var(--green); }
+.kv-pos-role.neg  { color: var(--red); }
+.kv-pos-role.zero { color: var(--text-3); }
 
-/* ── SETTLEMENT ROWS ──────────────────────────────────────── */
-.pt-settle {
+/* ── SETTLEMENT ROWS ───────────────────────────────────────── */
+.kv-settle {
   display: flex; align-items: center; gap: 0;
   padding: 14px 0; border-bottom: 1px solid var(--border);
 }
-.pt-settle:first-child { padding-top: 0; }
-.pt-settle:last-child  { border-bottom: none; padding-bottom: 0; }
+.kv-settle:first-child { padding-top: 0; }
+.kv-settle:last-child  { border-bottom: none; padding-bottom: 0; }
 
-.pt-settle-side { display: flex; align-items: center; gap: 9px; }
-.pt-settle-side.right { flex-direction: row-reverse; }
-.pt-settle-sname { font-size: 13px; font-weight: 600; color: var(--text); max-width: 72px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-.pt-settle-verb  { font-size: 10.5px; color: var(--text-3); margin-top: 1px; }
+.kv-settle-side { display: flex; align-items: center; gap: 9px; }
+.kv-settle-side.right { flex-direction: row-reverse; }
+.kv-settle-sname { font-size: 13px; font-weight: 600; color: var(--text); max-width: 76px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.kv-settle-verb  { font-size: 10px; color: var(--text-3); margin-top: 1px; letter-spacing: 0.08em; text-transform: uppercase; font-weight: 600; }
 
-.pt-settle-mid {
+.kv-settle-mid {
   flex: 1; display: flex; flex-direction: column;
-  align-items: center; gap: 5px; padding: 0 10px;
+  align-items: center; gap: 6px; padding: 0 12px;
 }
-.pt-settle-amt   { font-family: var(--mono); font-size: 13px; font-weight: 700; color: var(--text); }
-.pt-settle-track {
+.kv-settle-amt   {
+  font-family: var(--mono); font-size: 13px; font-weight: 700; color: var(--text);
+  font-feature-settings: "tnum" on;
+}
+.kv-settle-track {
   width: 100%; display: flex; align-items: center; gap: 4px;
+  position: relative;
 }
-.pt-settle-line {
-  flex: 1; height: 1px;
-  background: linear-gradient(90deg, var(--red-dim), var(--border-2), var(--green-dim));
+.kv-settle-line {
+  flex: 1; height: 1px; transform-origin: left;
+  background: linear-gradient(90deg, rgba(248,113,113,0.4), rgba(52,211,153,0.4));
 }
-.pt-settle-arrow { color: var(--text-3); display: flex; align-items: center; }
+.kv-settle-arrow { color: var(--primary); display: flex; align-items: center; }
 
-/* ── SETTLED EMPTY STATE ──────────────────────────────────── */
-.pt-settled {
-  text-align: center; padding: 24px 0 8px;
+/* ── SETTLED EMPTY STATE ───────────────────────────────────── */
+.kv-settled {
+  text-align: center; padding: 30px 0 12px;
+  position: relative;
 }
-.pt-settled-icon {
-  width: 44px; height: 44px; border-radius: 50%;
+.kv-settled-icon-wrap {
+  width: 64px; height: 64px; border-radius: 50%;
   background: var(--green-dim); color: var(--green);
   display: flex; align-items: center; justify-content: center;
-  margin: 0 auto 10px;
+  margin: 0 auto 14px;
+  border: 1px solid rgba(52,211,153,0.32);
+  position: relative;
+  box-shadow: 0 0 32px rgba(52,211,153,0.22);
 }
-.pt-settled-title { font-size: 14px; font-weight: 600; color: var(--text); margin-bottom: 4px; }
-.pt-settled-sub   { font-size: 12px; color: var(--text-3); }
+.kv-settled-burst {
+  position: absolute; inset: -20px; border-radius: 50%;
+  border: 1px solid var(--primary);
+  pointer-events: none;
+}
+.kv-settled-title { font-size: 16px; font-weight: 700; color: var(--text); margin-bottom: 5px; letter-spacing: -0.3px; }
+.kv-settled-sub   { font-size: 12px; color: var(--text-2); }
 
-/* ── SHARE ACTIONS ────────────────────────────────────────── */
-.pt-actions { display: flex; gap: 8px; }
-.pt-act {
-  flex: 1; height: 44px; border-radius: 9px;
+/* ── SHARE ACTIONS ─────────────────────────────────────────── */
+.kv-actions { display: flex; gap: 8px; }
+.kv-act {
+  flex: 1; height: 46px; border-radius: 11px;
   border: 1px solid var(--border); background: var(--surface);
-  color: var(--text-2); font-family: var(--font); font-size: 13px; font-weight: 500;
-  cursor: pointer; transition: all 0.15s; box-shadow: var(--shadow-sm);
-  display: flex; align-items: center; justify-content: center; gap: 6px;
+  color: var(--text-2); font-family: var(--font); font-size: 12px; font-weight: 600;
+  cursor: pointer; transition: all 0.18s cubic-bezier(0.4,0,0.2,1);
+  display: flex; align-items: center; justify-content: center; gap: 7px;
+  backdrop-filter: blur(14px); -webkit-backdrop-filter: blur(14px);
+  letter-spacing: 0.01em;
 }
-.pt-act:hover  { background: var(--surface-2); color: var(--text); border-color: var(--border-2); }
-.pt-act:active { transform: scale(0.98); }
-.pt-act.done   { border-color: rgba(16,185,129,0.4); color: var(--green); background: var(--green-dim); }
+.kv-act:hover  {
+  background: rgba(52,211,153,0.07); color: var(--text);
+  border-color: var(--border-2);
+  transform: translateY(-1px);
+}
+.kv-act:active { transform: translateY(0) scale(0.97); }
+.kv-act.done   {
+  border-color: rgba(52,211,153,0.5); color: var(--green);
+  background: var(--green-dim);
+}
 
-/* ── TOAST ────────────────────────────────────────────────── */
-.pt-toast {
+/* ── TOAST ─────────────────────────────────────────────────── */
+.kv-toast {
   position: fixed; bottom: 28px; left: 50%;
   transform: translateX(-50%) translateY(12px);
-  background: var(--text); color: #fff;
-  border-radius: 10px; padding: 10px 18px;
+  background: rgba(12, 22, 16, 0.9);
+  color: var(--text);
+  border: 1px solid var(--border-2);
+  border-radius: 11px; padding: 10px 18px;
   font-size: 13px; font-weight: 500; white-space: nowrap;
   opacity: 0; pointer-events: none;
   transition: opacity 0.22s, transform 0.22s;
   display: flex; align-items: center; gap: 8px; z-index: 9999;
-  box-shadow: 0 8px 24px rgba(15,23,42,0.2);
+  box-shadow: 0 12px 32px rgba(0,0,0,0.5), 0 0 24px rgba(52,211,153,0.15);
+  backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px);
 }
-.pt-toast.up { opacity: 1; transform: translateX(-50%) translateY(0); }
+.kv-toast.up { opacity: 1; transform: translateX(-50%) translateY(0); }
 
-/* ── HIDDEN SHARE CARD (for image capture) ─────────────────── */
-.pt-hidden { position: absolute; left: -9999px; top: 0; }
-.pt-share {
-  width: 320px; padding: 24px; border-radius: 16px;
-  background: var(--surface); color: var(--text);
-  border: 1px solid var(--border);
-  box-shadow: 0 8px 32px rgba(15,23,42,0.12);
+/* ── HIDDEN SHARE CARD ─────────────────────────────────────── */
+.kv-hidden { position: absolute; left: -9999px; top: 0; }
+.kv-share {
+  width: 360px; padding: 26px; border-radius: 18px;
+  background: linear-gradient(160deg, #0a1410 0%, #060c08 100%);
+  color: var(--text);
+  border: 1px solid rgba(52,211,153,0.18);
+  box-shadow: 0 12px 48px rgba(0,0,0,0.5);
 }
-.pt-share-hdr  { display: flex; align-items: center; gap: 10px; margin-bottom: 18px; }
-.pt-share-mark {
-  width: 32px; height: 32px; border-radius: 9px; flex-shrink: 0;
-  background: linear-gradient(140deg, #5C67F5, #8B5CF6, #A78BFA);
+.kv-share-hdr  { display: flex; align-items: center; gap: 10px; margin-bottom: 18px; }
+.kv-share-mark {
+  width: 34px; height: 34px; border-radius: 10px; flex-shrink: 0;
+  background: linear-gradient(140deg, #34d399, #10b981, #047857);
   display: flex; align-items: center; justify-content: center;
-  overflow: hidden;
 }
-.pt-share-brand { font-size: 15px; font-weight: 700; letter-spacing: -0.4px; }
-.pt-share-desc  { font-size: 12px; color: var(--text-2); }
-.pt-share-amount { font-family: var(--mono); font-size: 32px; font-weight: 700; letter-spacing: -1px; margin: 14px 0; }
-.pt-share-div   { height: 1px; background: var(--border); margin: 12px 0; }
-.pt-share-row   { display: flex; justify-content: space-between; align-items: center; padding: 7px 0; font-size: 13px; }
-.pt-share-person { color: var(--text-2); }
-.pt-share-pos    { font-family: var(--mono); color: var(--green); font-weight: 600; }
-.pt-share-neg    { font-family: var(--mono); color: var(--red);   font-weight: 600; }
+.kv-share-brand { font-size: 16px; font-weight: 800; letter-spacing: -0.4px; }
+.kv-share-desc  { font-size: 12px; color: var(--text-2); }
+.kv-share-amount {
+  font-family: var(--mono); font-size: 36px; font-weight: 700; letter-spacing: -1.2px;
+  margin: 14px 0; color: var(--primary);
+  font-feature-settings: "tnum" on;
+}
+.kv-share-div   { height: 1px; background: var(--border); margin: 12px 0; }
+.kv-share-row   { display: flex; justify-content: space-between; align-items: center; padding: 7px 0; font-size: 13px; }
+.kv-share-person { color: var(--text-2); }
+.kv-share-pos    { font-family: var(--mono); color: var(--green); font-weight: 700; font-feature-settings: "tnum" on; }
+.kv-share-neg    { font-family: var(--mono); color: var(--red);   font-weight: 700; font-feature-settings: "tnum" on; }
 
-/* ── SCROLLBAR ────────────────────────────────────────────── */
-::-webkit-scrollbar { width: 4px; }
+/* ── SCROLLBAR ─────────────────────────────────────────────── */
+::-webkit-scrollbar { width: 6px; height: 6px; }
 ::-webkit-scrollbar-track { background: transparent; }
-::-webkit-scrollbar-thumb { background: var(--border-2); border-radius: 99px; }
+::-webkit-scrollbar-thumb { background: rgba(52,211,153,0.16); border-radius: 99px; }
+::-webkit-scrollbar-thumb:hover { background: rgba(52,211,153,0.28); }
 
-/* ── DARK MODE ────────────────────────────────────────────── */
-.pt.dark {
-  --bg:          transparent;
-  --surface:     rgba(11, 17, 32, 0.75);
-  --surface-2:   rgba(0, 0, 0, 0.30);
-  --border:      rgba(255,255,255,0.07);
-  --border-2:    rgba(255,255,255,0.13);
-  --primary-dim: rgba(92,103,245,0.15);
-  --green-dim:   rgba(16,185,129,0.13);
-  --red-dim:     rgba(244,63,94,0.13);
-  --text:        #eef2ff;
-  --text-2:      #64748b;
-  --text-3:      #475569;
-  --shadow-sm:   0 1px 2px rgba(0,0,0,0.4);
-  --shadow:      0 1px 3px rgba(0,0,0,0.5), 0 1px 2px rgba(0,0,0,0.4);
-  --shadow-md:   0 4px 6px -1px rgba(0,0,0,0.5), 0 2px 4px -1px rgba(0,0,0,0.4);
+/* ── TIME SPLIT — person row ───────────────────────────────── */
+.kv-trow {
+  padding: 14px 0;
+  border-bottom: 1px solid var(--border);
 }
-/* dark background gradient — same as original flashlight design */
-.pt.dark { background: radial-gradient(ellipse at 60% 0%, #0f1729 0%, #05080f 100%); }
+.kv-trow:last-of-type  { border-bottom: none; padding-bottom: 0; }
+.kv-trow:first-of-type { padding-top: 0; }
 
-/* glassmorphism cards in dark mode */
-.pt.dark .pt-card,
-.pt.dark .pt-pos,
-.pt.dark .pt-act { backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px); }
-
-/* inputs need a slightly lighter base in dark */
-.pt.dark input.pt-inp { background: rgba(0,0,0,0.3); color: #eef2ff; }
-.pt.dark input.pt-inp:focus { background: rgba(0,0,0,0.45); }
-
-/* stats strip separator in dark */
-.pt.dark .pt-stats { background: rgba(255,255,255,0.06); }
-
-/* toast in dark mode */
-.pt.dark .pt-toast { background: #1e293b; border: 1px solid rgba(255,255,255,0.08); }
-
-/* ── FLASHLIGHT ───────────────────────────────────────────── */
-.pt-flash {
-  position: fixed; inset: 0; pointer-events: none; z-index: 0;
-  transition: background 0.05s;
+.kv-trow-top { display: flex; align-items: center; gap: 8px; margin-bottom: 11px; }
+.kv-trow-right {
+  display: flex; flex-direction: column; align-items: flex-end;
+  flex-shrink: 0; gap: 2px;
+}
+.kv-trow-time {
+  font-family: var(--mono); font-size: 13px; font-weight: 700;
+  color: var(--text); letter-spacing: -0.3px;
+  font-feature-settings: "tnum" on;
+}
+.kv-trow-share {
+  font-size: 11px; color: var(--text-3); font-weight: 500;
+  font-feature-settings: "tnum" on;
 }
 
-/* ── THEME TOGGLE BUTTON ──────────────────────────────────── */
-.pt-theme {
-  position: fixed; top: 18px; right: 18px; z-index: 200;
-  width: 40px; height: 40px; border-radius: 10px;
-  border: 1px solid var(--border); background: var(--surface);
-  color: var(--text-2); cursor: pointer;
-  display: flex; align-items: center; justify-content: center;
-  box-shadow: var(--shadow); transition: all 0.2s;
+/* ── SLIDER ────────────────────────────────────────────────── */
+.kv-slider {
+  -webkit-appearance: none; appearance: none;
+  width: 100%; height: 6px; border-radius: 99px;
+  outline: none; cursor: pointer; display: block;
+  margin-bottom: 11px;
 }
-.pt-theme:hover  { color: var(--text); border-color: var(--border-2); }
-.pt-theme:active { transform: scale(0.92); }
-/* glass effect in dark mode */
-.pt.dark .pt-theme { backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px); }
+.kv-slider::-webkit-slider-thumb {
+  -webkit-appearance: none; appearance: none;
+  width: 22px; height: 22px; border-radius: 50%;
+  background: linear-gradient(135deg, #ecfdf5, #6ee7b7);
+  box-shadow:
+    0 0 0 3px rgba(52,211,153,0.22),
+    0 2px 10px rgba(52,211,153,0.45),
+    inset 0 1px 0 rgba(255,255,255,0.4);
+  cursor: grab; transition: transform 0.14s, box-shadow 0.14s;
+}
+.kv-slider::-webkit-slider-thumb:active {
+  transform: scale(1.22); cursor: grabbing;
+  box-shadow:
+    0 0 0 6px rgba(52,211,153,0.28),
+    0 2px 14px rgba(52,211,153,0.55);
+}
+.kv-slider::-moz-range-thumb {
+  width: 22px; height: 22px; border-radius: 50%; border: none;
+  background: linear-gradient(135deg, #ecfdf5, #6ee7b7);
+  box-shadow: 0 0 0 3px rgba(52,211,153,0.22), 0 2px 10px rgba(52,211,153,0.45);
+  cursor: grab;
+}
+
+.kv-trow-footer {
+  display: flex; align-items: center; justify-content: space-between;
+  gap: 8px; flex-wrap: wrap;
+}
+.kv-presets { display: flex; gap: 5px; }
+.kv-preset {
+  height: 28px; padding: 0 11px; border-radius: 7px;
+  border: 1px solid var(--border); background: rgba(0,0,0,0.25);
+  color: var(--text-2);
+  font-family: var(--font); font-size: 11px; font-weight: 600;
+  cursor: pointer; transition: all 0.16s cubic-bezier(0.4,0,0.2,1);
+  white-space: nowrap; letter-spacing: 0.02em;
+}
+.kv-preset:hover {
+  background: rgba(52,211,153,0.09); border-color: var(--border-2); color: var(--primary);
+}
+.kv-preset.on {
+  background: rgba(52,211,153,0.16); border-color: rgba(52,211,153,0.5);
+  color: #6ee7b7; font-weight: 700;
+  box-shadow: 0 0 12px rgba(52,211,153,0.18);
+}
+.kv-preset:active { transform: scale(0.94); }
+
+.kv-trow-paid-wrap { display: flex; align-items: center; gap: 6px; flex-shrink: 0; }
+.kv-trow-paid-lbl  { font-size: 10.5px; color: var(--text-3); white-space: nowrap; letter-spacing: 0.08em; text-transform: uppercase; font-weight: 600; }
+
+/* ── PARTICIPATION TIMELINE ────────────────────────────────── */
+.kv-tl-hdr {
+  display: flex; align-items: baseline; justify-content: space-between;
+  margin-bottom: 16px;
+}
+.kv-tl-title {
+  font-size: 13px; font-weight: 700; color: var(--text);
+  display: inline-flex; align-items: center; gap: 7px;
+}
+.kv-tl-sub {
+  font-family: var(--mono); font-size: 11px; color: var(--text-3);
+  font-feature-settings: "tnum" on;
+}
+
+.kv-tl-row {
+  display: grid; grid-template-columns: 90px 1fr 44px;
+  gap: 10px; align-items: center; margin-bottom: 10px;
+}
+.kv-tl-row:last-child { margin-bottom: 0; }
+.kv-tl-person { display: flex; align-items: center; gap: 7px; overflow: hidden; min-width: 0; }
+.kv-tl-pname  {
+  font-size: 11.5px; font-weight: 500; color: var(--text);
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+}
+.kv-tl-track {
+  height: 9px; background: rgba(0,0,0,0.32);
+  border-radius: 99px; overflow: hidden;
+  border: 1px solid var(--border);
+}
+.kv-tl-fill {
+  height: 100%; border-radius: 99px;
+  transform-origin: left;
+  box-shadow: inset 0 1px 0 rgba(255,255,255,0.18);
+}
+.kv-tl-dur {
+  font-family: var(--mono); font-size: 10.5px; color: var(--text-3);
+  text-align: right; white-space: nowrap;
+  font-feature-settings: "tnum" on;
+}
+
+/* ── FAIRNESS STRIP ────────────────────────────────────────── */
+.kv-fi {
+  margin-top: 16px; padding-top: 14px;
+  border-top: 1px solid var(--border);
+  display: flex; align-items: center; gap: 6px; flex-wrap: wrap;
+}
+.kv-fi-lbl {
+  font-size: 10px; color: var(--text-3); flex-shrink: 0;
+  letter-spacing: 0.1em; text-transform: uppercase; font-weight: 600;
+}
+.kv-badge {
+  display: inline-flex; align-items: center; gap: 3px;
+  height: 22px; padding: 0 8px; border-radius: 99px;
+  font-size: 10px; font-weight: 700; white-space: nowrap;
+  letter-spacing: 0.01em;
+  font-feature-settings: "tnum" on;
+}
+.kv-badge.save { background: var(--green-dim); color: var(--green); border: 1px solid rgba(52,211,153,0.22); }
+.kv-badge.more { background: var(--red-dim);   color: var(--red);   border: 1px solid rgba(248,113,113,0.22); }
+.kv-badge.even { background: rgba(255,255,255,0.04); color: var(--text-3); border: 1px solid var(--border); }
+
+.kv-dur-hint {
+  margin-bottom: 14px; padding: 11px 13px; border-radius: 10px;
+  background: rgba(52,211,153,0.06); border: 1px solid rgba(52,211,153,0.18);
+  font-size: 12px; color: rgba(110,231,183,0.85); font-weight: 500;
+  display: flex; align-items: center; gap: 8px;
+}
+
+/* ── FOOTER ─────────────────────────────────────────────── */
+.kv-footer {
+  margin-top: 56px; padding-top: 28px;
+  border-top: 1px solid var(--border);
+  text-align: center;
+  font-size: 11px; color: var(--text-3);
+  letter-spacing: 0.06em;
+}
+.kv-footer a { color: rgba(52,211,153,0.65); text-decoration: none; }
+.kv-footer a:hover { color: var(--primary); }
 `;
 
 // ═════════════════════════════════════════════════════════════
 //  CONSTANTS
 // ═════════════════════════════════════════════════════════════
 const AVATAR_COLORS = [
-  "#5C67F5","#10B981","#F59E0B","#F43F5E",
-  "#06B6D4","#8B5CF6","#EC4899","#14B8A6",
+  "#34d399", "#60a5fa", "#fbbf24", "#f472b6",
+  "#a78bfa", "#22d3ee", "#fb923c", "#4ade80",
 ];
-const DEFAULT_NAMES = ["Alice","Bob","Charlie","Dana","Eve","Frank","Grace","Hana"];
+const DEFAULT_NAMES = ["Alice", "Bob", "Cara", "Dom", "Eli", "Fae", "Gus", "Hari"];
 
 // ═════════════════════════════════════════════════════════════
-//  LOGO MARK — split-K with a deliberate gap at the junction
-//  (one bill → divides into two people)
+//  LOGO MARK — split-K with a deliberate gap
 // ═════════════════════════════════════════════════════════════
-function KvitMark({ size = 20 }) {
-  // K geometry: vertical bar + two diagonal arms that start
-  // 4px apart at the spine, suggesting a split/divide
+function KvitMark({ size = 22 }) {
   const h = size;
   const w = size * 0.88;
   const barW  = w * 0.22;
-  const gapY  = h * 0.5;          // centre of the K
-  const split = h * 0.11;         // half-gap between arms
-  const arm1Y = gapY - split;     // upper arm origin
-  const arm2Y = gapY + split;     // lower arm origin
+  const gapY  = h * 0.5;
+  const split = h * 0.11;
+  const arm1Y = gapY - split;
+  const arm2Y = gapY + split;
 
   return (
     <svg width={w} height={h} viewBox={`0 0 ${w} ${h}`} fill="none">
-      {/* Vertical bar */}
-      <rect x="0" y="0" width={barW} height={h} rx={barW / 2} fill="rgba(255,255,255,0.95)" />
-      {/* Upper arm */}
-      <line
-        x1={barW + 1} y1={arm1Y}
-        x2={w}         y2={1}
-        stroke="rgba(255,255,255,0.92)"
-        strokeWidth={barW * 0.85}
-        strokeLinecap="round"
-      />
-      {/* Lower arm */}
-      <line
-        x1={barW + 1} y1={arm2Y}
-        x2={w}         y2={h - 1}
-        stroke="rgba(255,255,255,0.92)"
-        strokeWidth={barW * 0.85}
-        strokeLinecap="round"
-      />
+      <rect x="0" y="0" width={barW} height={h} rx={barW / 2} fill="rgba(255,255,255,0.96)" />
+      <line x1={barW + 1} y1={arm1Y} x2={w} y2={1}
+        stroke="rgba(255,255,255,0.94)" strokeWidth={barW * 0.85} strokeLinecap="round" />
+      <line x1={barW + 1} y1={arm2Y} x2={w} y2={h - 1}
+        stroke="rgba(255,255,255,0.94)" strokeWidth={barW * 0.85} strokeLinecap="round" />
     </svg>
   );
 }
@@ -456,6 +754,15 @@ function KvitMark({ size = 20 }) {
 // ═════════════════════════════════════════════════════════════
 const init = (name) => (name || "?").charAt(0).toUpperCase();
 const fmt  = (n)    => Math.abs(n).toFixed(2);
+const formatMins = (m) => {
+  const n = Number(m) || 0;
+  if (n <= 0) return "0m";
+  const h = Math.floor(n / 60);
+  const min = n % 60;
+  if (h === 0) return `${min}m`;
+  if (min === 0) return `${h}h`;
+  return `${h}h ${min}m`;
+};
 
 /** Minimise transactions: match debtors to creditors */
 function calcSettlements(people, getOwes) {
@@ -479,28 +786,194 @@ function calcSettlements(people, getOwes) {
 }
 
 // ═════════════════════════════════════════════════════════════
+//  COMPONENT: CountUp — animates a number with motion values
+// ═════════════════════════════════════════════════════════════
+function CountUp({ value, prefix = "£", decimals = 2, duration = 0.55 }) {
+  const reduce = useReducedMotion();
+  const mv = useMotionValue(value);
+  const display = useTransform(mv, v => prefix + (Math.abs(v) < 0.005 ? 0 : v).toFixed(decimals));
+
+  useEffect(() => {
+    if (reduce) { mv.set(value); return; }
+    const controls = animate(mv, value, {
+      duration,
+      ease: [0.32, 0.72, 0.24, 1],
+    });
+    return () => controls.stop();
+  }, [value, duration, reduce, mv]);
+
+  return <motion.span>{display}</motion.span>;
+}
+
+// ═════════════════════════════════════════════════════════════
+//  COMPONENT: Reveal — fades child up on scroll into view
+// ═════════════════════════════════════════════════════════════
+function Reveal({ children, delay = 0, y = 18 }) {
+  return (
+    <motion.div
+      initial={{ opacity: 0, y }}
+      whileInView={{ opacity: 1, y: 0 }}
+      viewport={{ once: true, margin: "-60px" }}
+      transition={{ duration: 0.5, delay, ease: [0.4, 0, 0.2, 1] }}
+    >
+      {children}
+    </motion.div>
+  );
+}
+
+// ═════════════════════════════════════════════════════════════
+//  COMPONENT: Hero
+// ═════════════════════════════════════════════════════════════
+function Hero({ onSample, total }) {
+  return (
+    <header className="kv-hero">
+      <motion.div
+        initial={{ opacity: 0, scale: 0.85, y: -8 }}
+        animate={{ opacity: 1, scale: 1, y: 0 }}
+        transition={{ duration: 0.6, ease: [0.32, 0.72, 0.24, 1] }}
+        className="kv-hero-mark"
+      >
+        <KvitMark size={28} />
+      </motion.div>
+
+      <motion.h1
+        className="kv-hero-title"
+        initial={{ opacity: 0, y: 12 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.55, delay: 0.08 }}
+      >
+        Kvit
+      </motion.h1>
+
+      <motion.p
+        className="kv-hero-tag"
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        transition={{ duration: 0.5, delay: 0.18 }}
+      >
+        ~ Call it even ~
+      </motion.p>
+
+      <motion.div
+        className="kv-hero-pills"
+        initial={{ opacity: 0, y: 8 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.5, delay: 0.28 }}
+      >
+        <span className="kv-hero-pill"><span className="dot" /> No account</span>
+        <span className="kv-hero-pill">3 split modes</span>
+        <span className="kv-hero-pill">Instant settle-up</span>
+      </motion.div>
+
+      <motion.button
+        type="button"
+        className="kv-hero-cta"
+        onClick={onSample}
+        initial={{ opacity: 0, y: 8 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.5, delay: 0.38 }}
+        whileHover={{ scale: 1.03 }}
+        whileTap={{ scale: 0.97 }}
+      >
+        <Sparkles size={14} />
+        Try with sample data
+      </motion.button>
+
+      {total === 0 && (
+        <motion.div
+          className="kv-scroll-cue"
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          transition={{ duration: 0.5, delay: 0.6 }}
+        >
+          <ChevronDown size={18} />
+        </motion.div>
+      )}
+    </header>
+  );
+}
+
+// ═════════════════════════════════════════════════════════════
+//  COMPONENT: ModePicker — animated 3-tab selector
+// ═════════════════════════════════════════════════════════════
+function ModePicker({ mode, setMode }) {
+  const MODES = [
+    { id: "equal",  Icon: Scale,   label: "Equal",    desc: "Same share for everyone"        },
+    { id: "manual", Icon: Percent, label: "Custom %", desc: "Set each person's percentage"   },
+    { id: "time",   Icon: Clock,   label: "By Time",  desc: "Pay in proportion to time used" },
+  ];
+  const idx = MODES.findIndex(m => m.id === mode);
+  const active = MODES[idx] || MODES[0];
+
+  return (
+    <div>
+      <div className="kv-modes">
+        {MODES.map(m => {
+          const on = mode === m.id;
+          return (
+            <button
+              key={m.id}
+              type="button"
+              className={`kv-mode${on ? " on" : ""}`}
+              onClick={() => setMode(m.id)}
+              style={{ position: "relative" }}
+            >
+              {on && (
+                <motion.span
+                  layoutId="kv-mode-ind"
+                  className="kv-mode-ind"
+                  transition={{ type: "spring", stiffness: 380, damping: 32 }}
+                />
+              )}
+              <span style={{ position: "relative", zIndex: 2, display: "inline-flex", alignItems: "center", gap: 6 }}>
+                <m.Icon size={13} />
+                {m.label}
+              </span>
+            </button>
+          );
+        })}
+      </div>
+      <AnimatePresence mode="wait">
+        <motion.p
+          key={active.id}
+          className="kv-mode-desc"
+          initial={{ opacity: 0, y: 4 }}
+          animate={{ opacity: 1, y: 0 }}
+          exit={{ opacity: 0, y: -4 }}
+          transition={{ duration: 0.18 }}
+        >
+          {active.desc}
+        </motion.p>
+      </AnimatePresence>
+    </div>
+  );
+}
+
+// ═════════════════════════════════════════════════════════════
 //  COMPONENT: ExpenseInput
 // ═════════════════════════════════════════════════════════════
-function ExpenseInput({ description, setDescription, amount, setAmount, mode, setMode }) {
+function ExpenseInput({ description, setDescription, amount, setAmount, mode, bookingDuration, setBookingDuration }) {
   return (
-    <div className="pt-card">
-      <div className="pt-field">
-        <label className="pt-field-label">What's the expense?</label>
+    <div className="kv-card">
+      <div className="kv-field">
+        <label className="kv-field-lbl">
+          {mode === "time" ? "What's the booking?" : "What's the expense?"}
+        </label>
         <input
-          className="pt-inp"
+          className="kv-inp"
           type="text"
-          placeholder="Dinner at Nobu, Uber to airport…"
+          placeholder={mode === "time" ? "Padel court, tennis session, gym slot…" : "Dinner at Nobu, Uber to airport…"}
           value={description}
           onChange={e => setDescription(e.target.value)}
         />
       </div>
 
-      <div className="pt-field">
-        <label className="pt-field-label">Total amount</label>
-        <div className="pt-pfx-wrap">
-          <span className="pt-pfx">£</span>
+      <div className="kv-field">
+        <label className="kv-field-lbl">Total {mode === "time" ? "booking cost" : "amount"}</label>
+        <div className="kv-pfx-wrap">
+          <span className="kv-pfx">£</span>
           <input
-            className="pt-inp pl"
+            className="kv-inp pl"
             type="number"
             placeholder="0.00"
             value={amount}
@@ -509,20 +982,28 @@ function ExpenseInput({ description, setDescription, amount, setAmount, mode, se
         </div>
       </div>
 
-      <div className="pt-toggle">
-        <button
-          className={`pt-mode${mode === "equal"  ? " on" : ""}`}
-          onClick={() => setMode("equal")}
+      {mode === "time" && (
+        <motion.div
+          className="kv-field"
+          initial={{ opacity: 0, height: 0, marginBottom: 0 }}
+          animate={{ opacity: 1, height: "auto", marginBottom: 14 }}
+          exit={{ opacity: 0, height: 0, marginBottom: 0 }}
+          transition={{ duration: 0.22 }}
         >
-          Equal Split
-        </button>
-        <button
-          className={`pt-mode${mode === "manual" ? " on" : ""}`}
-          onClick={() => setMode("manual")}
-        >
-          Custom %
-        </button>
-      </div>
+          <label className="kv-field-lbl">Session duration</label>
+          <div className="kv-pfx-wrap">
+            <input
+              className="kv-inp pr"
+              type="number"
+              placeholder="90"
+              min="1"
+              value={bookingDuration}
+              onChange={e => setBookingDuration(e.target.value)}
+            />
+            <span className="kv-sfx">min</span>
+          </div>
+        </motion.div>
+      )}
     </div>
   );
 }
@@ -537,33 +1018,36 @@ function PersonRow({ person, index, mode, onUpdate, owes }) {
   const row   = mode === "equal" ? "eq" : "man";
 
   return (
-    <div className={`pt-row ${row}`}>
-      {/* Name + avatar */}
-      <div className="pt-name-cell">
-        <div className="pt-av" style={{ background: AVATAR_COLORS[index % AVATAR_COLORS.length] }}>
+    <motion.div
+      className={`kv-row ${row}`}
+      layout
+      initial={{ opacity: 0, x: -8 }}
+      animate={{ opacity: 1, x: 0 }}
+      transition={{ duration: 0.25 }}
+    >
+      <div className="kv-name-cell">
+        <div className="kv-av" style={{ background: AVATAR_COLORS[index % AVATAR_COLORS.length] }}>
           {init(person.name)}
         </div>
         <input
-          className="pt-inp sm"
+          className="kv-inp sm"
           value={person.name}
           placeholder="Name"
           onChange={e => onUpdate("name", e.target.value)}
         />
       </div>
 
-      {/* Paid */}
       <input
-        className="pt-inp sm center"
+        className="kv-inp sm center"
         type="number"
         placeholder="0"
         value={person.paid}
         onChange={e => onUpdate("paid", e.target.value)}
       />
 
-      {/* Percent — manual only */}
       {mode === "manual" && (
         <input
-          className="pt-inp sm center"
+          className="kv-inp sm center"
           type="number"
           placeholder="0"
           value={person.percent}
@@ -571,63 +1055,249 @@ function PersonRow({ person, index, mode, onUpdate, owes }) {
         />
       )}
 
-      {/* Balance pill */}
-      <div className={`pt-bal ${cls}`}>
-        {isNeg ? "−" : isPos ? "+" : ""}£{fmt(owes)}
+      <div className={`kv-bal ${cls}`}>
+        {isNeg ? "−" : isPos ? "+" : ""}
+        <CountUp value={Math.abs(owes)} prefix="£" />
       </div>
+    </motion.div>
+  );
+}
+
+// ═════════════════════════════════════════════════════════════
+//  COMPONENT: TimePersonRow
+// ═════════════════════════════════════════════════════════════
+function TimePersonRow({ person, index, onUpdate, bookingDuration, owes, timeShare }) {
+  const totalMin = Number(bookingDuration) || 120;
+  const mins     = Number(person.minutes) || 0;
+  const pct      = totalMin > 0 ? Math.min((mins / totalMin) * 100, 100) : 0;
+  const color    = AVATAR_COLORS[index % AVATAR_COLORS.length];
+
+  const isNeg  = owes >  0.005;
+  const isPos  = owes < -0.005;
+  const balCls = isNeg ? "neg" : isPos ? "pos" : "zero";
+
+  const PRESETS = [
+    { label: "Full", frac: 1    },
+    { label: "¾",    frac: 0.75 },
+    { label: "½",    frac: 0.5  },
+    { label: "¼",    frac: 0.25 },
+  ];
+  const setPreset = (frac) => onUpdate("minutes", Math.round(totalMin * frac));
+  const isActive  = (frac) => Math.abs(mins - Math.round(totalMin * frac)) <= 2;
+
+  return (
+    <motion.div
+      className="kv-trow"
+      layout
+      initial={{ opacity: 0, y: 6 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.25 }}
+    >
+      <div className="kv-trow-top">
+        <div className="kv-av" style={{ background: color }}>{init(person.name)}</div>
+        <input
+          className="kv-inp sm"
+          value={person.name}
+          placeholder="Name"
+          onChange={e => onUpdate("name", e.target.value)}
+          style={{ flex: 1, minWidth: 0 }}
+        />
+        <div className="kv-trow-right">
+          <div className="kv-trow-time">{formatMins(mins)}</div>
+          <div className="kv-trow-share">£{timeShare.toFixed(2)} share</div>
+        </div>
+      </div>
+
+      <input
+        type="range"
+        className="kv-slider"
+        min="0"
+        max={totalMin}
+        step="5"
+        value={mins}
+        onChange={e => onUpdate("minutes", Number(e.target.value))}
+        style={{
+          background: `linear-gradient(to right, ${color} 0%, ${color} ${pct}%, rgba(255,255,255,0.06) ${pct}%, rgba(255,255,255,0.06) 100%)`
+        }}
+      />
+
+      <div className="kv-trow-footer">
+        <div className="kv-presets">
+          {PRESETS.map(({ label, frac }) => (
+            <button
+              key={frac}
+              className={`kv-preset${isActive(frac) ? " on" : ""}`}
+              onClick={() => setPreset(frac)}
+            >
+              {label}
+            </button>
+          ))}
+        </div>
+        <div className="kv-trow-paid-wrap">
+          <span className="kv-trow-paid-lbl">Paid</span>
+          <div className="kv-pfx-wrap">
+            <span className="kv-pfx" style={{ fontSize: 12, left: 9 }}>£</span>
+            <input
+              className="kv-inp sm pl"
+              type="number"
+              placeholder="0"
+              value={person.paid}
+              onChange={e => onUpdate("paid", e.target.value)}
+              style={{ width: 78, paddingLeft: 22 }}
+            />
+          </div>
+        </div>
+      </div>
+
+      <div className={`kv-bal ${balCls}`} style={{ marginTop: 11, fontSize: 12 }}>
+        {isNeg ? "−" : isPos ? "+" : ""}
+        <CountUp value={Math.abs(owes)} prefix="£" />
+        <span style={{ fontFamily: "var(--font)", fontWeight: 600, marginLeft: 7, opacity: 0.65, fontSize: 10, letterSpacing: "0.08em", textTransform: "uppercase" }}>
+          {isNeg ? "owes" : isPos ? "gets back" : "settled"}
+        </span>
+      </div>
+    </motion.div>
+  );
+}
+
+// ═════════════════════════════════════════════════════════════
+//  COMPONENT: ParticipationTimeline
+// ═════════════════════════════════════════════════════════════
+function ParticipationTimeline({ people, bookingDuration, total }) {
+  const totalMin    = Number(bookingDuration) || 0;
+  const denominator = totalMin > 0
+    ? totalMin
+    : people.reduce((s, p) => s + (Number(p.minutes) || 0), 0);
+  const equalShare = people.length > 0 ? total / people.length : 0;
+
+  return (
+    <div className="kv-card">
+      <div className="kv-tl-hdr">
+        <span className="kv-tl-title">
+          <Clock size={13} style={{ color: "var(--primary)", opacity: 0.7 }} />
+          Participation
+        </span>
+        {totalMin > 0 && (
+          <span className="kv-tl-sub">{formatMins(totalMin)} session</span>
+        )}
+      </div>
+
+      {people.map((p, i) => {
+        const mins  = Number(p.minutes) || 0;
+        const pct   = denominator > 0 ? Math.min((mins / denominator) * 100, 100) : 0;
+        const color = AVATAR_COLORS[i % AVATAR_COLORS.length];
+
+        return (
+          <div key={p.id} className="kv-tl-row">
+            <div className="kv-tl-person">
+              <div
+                className="kv-av"
+                style={{ background: color, width: 18, height: 18, borderRadius: 5, fontSize: 8.5, flexShrink: 0 }}
+              >
+                {init(p.name)}
+              </div>
+              <span className="kv-tl-pname">{p.name || "—"}</span>
+            </div>
+            <div className="kv-tl-track">
+              <motion.div
+                className="kv-tl-fill"
+                style={{ background: color }}
+                initial={{ width: 0 }}
+                animate={{ width: `${pct}%` }}
+                transition={{ duration: 0.55, ease: [0.4, 0, 0.2, 1] }}
+              />
+            </div>
+            <span className="kv-tl-dur">{formatMins(mins)}</span>
+          </div>
+        );
+      })}
+
+      {total > 0 && denominator > 0 && (
+        <div className="kv-fi">
+          <span className="kv-fi-lbl">vs equal £{equalShare.toFixed(2)}</span>
+          {people.map((p, i) => {
+            const mins      = Number(p.minutes) || 0;
+            const timeShare = (total * mins) / denominator;
+            const diff      = equalShare - timeShare;
+            const absDiff   = Math.abs(diff);
+            const cls  = absDiff < 0.05 ? "even" : diff > 0 ? "save" : "more";
+            const text = absDiff < 0.05
+              ? `${init(p.name)} ±£0`
+              : diff > 0
+                ? `${init(p.name)} −£${diff.toFixed(2)}`
+                : `${init(p.name)} +£${absDiff.toFixed(2)}`;
+            return <span key={p.id} className={`kv-badge ${cls}`}>{text}</span>;
+          })}
+        </div>
+      )}
     </div>
   );
 }
 
 // ═════════════════════════════════════════════════════════════
 //  COMPONENT: BalanceSummary
-//  Shows stats strip + scrollable per-person position cards
 // ═════════════════════════════════════════════════════════════
-function BalanceSummary({ people, total, getOwes, mode }) {
+function BalanceSummary({ people, total, getOwes, mode, bookingDuration }) {
   return (
     <>
-      {/* 3-column stats strip */}
-      <div className="pt-stats">
-        <div className="pt-stat">
-          <div className="pt-stat-lbl">Total</div>
-          <div className="pt-stat-val">£{total.toFixed(2)}</div>
+      <div className="kv-stats">
+        <div className="kv-stat">
+          <div className="kv-stat-lbl">Total</div>
+          <div className="kv-stat-val">
+            <CountUp value={total} prefix="£" />
+          </div>
         </div>
-        <div className="pt-stat">
-          <div className="pt-stat-lbl">People</div>
-          <div className="pt-stat-val">{people.length}</div>
+        <div className="kv-stat">
+          <div className="kv-stat-lbl">People</div>
+          <div className="kv-stat-val">{people.length}</div>
         </div>
-        <div className="pt-stat">
-          <div className="pt-stat-lbl">{mode === "equal" ? "Each" : "Avg"}</div>
-          <div className="pt-stat-val">£{(total / people.length).toFixed(2)}</div>
+        <div className="kv-stat">
+          <div className="kv-stat-lbl">{mode === "time" ? "Session" : mode === "equal" ? "Each" : "Avg"}</div>
+          <div className="kv-stat-val">
+            {mode === "time" && Number(bookingDuration) > 0
+              ? formatMins(Number(bookingDuration))
+              : <CountUp value={total / people.length} prefix="£" />}
+          </div>
         </div>
       </div>
 
-      {/* Per-person position cards (horizontal scroll) */}
-      <div className="pt-positions">
+      <div className="kv-positions">
         {people.map((p, i) => {
-          const owes  = getOwes(p);
-          const isPos  = owes < -0.005;   // creditor — gets back
-          const isNeg  = owes >  0.005;   // debtor   — owes
+          const owes = getOwes(p);
+          const isPos  = owes < -0.005;
+          const isNeg  = owes >  0.005;
           const cls    = isPos ? "pos" : isNeg ? "neg" : "zero";
 
           return (
-            <div key={p.id} className="pt-pos">
-              <div className="pt-pos-top">
-                <div className="pt-av" style={{ background: AVATAR_COLORS[i % AVATAR_COLORS.length] }}>
+            <motion.div
+              key={p.id}
+              className="kv-pos"
+              layout
+              initial={{ opacity: 0, scale: 0.96 }}
+              animate={{ opacity: 1, scale: 1 }}
+              transition={{ duration: 0.28, delay: i * 0.04 }}
+            >
+              <div className="kv-pos-top">
+                <div className="kv-av" style={{ background: AVATAR_COLORS[i % AVATAR_COLORS.length] }}>
                   {init(p.name)}
                 </div>
                 <div>
-                  <div className="pt-pos-name">{p.name || "—"}</div>
-                  <div className="pt-pos-paid">Paid £{fmt(Number(p.paid) || 0)}</div>
+                  <div className="kv-pos-name">{p.name || "—"}</div>
+                  <div className="kv-pos-sub">
+                    {mode === "time"
+                      ? `Played ${formatMins(Number(p.minutes) || 0)}`
+                      : `Paid £${fmt(Number(p.paid) || 0)}`}
+                  </div>
                 </div>
               </div>
-              <div className={`pt-pos-amt ${cls}`}>
-                {isPos ? "+" : isNeg ? "−" : ""}£{fmt(owes)}
+              <div className={`kv-pos-amt ${cls}`}>
+                {isPos ? "+" : isNeg ? "−" : ""}
+                <CountUp value={Math.abs(owes)} prefix="£" />
               </div>
-              <div className={`pt-pos-role ${cls}`}>
+              <div className={`kv-pos-role ${cls}`}>
                 {isPos ? "Gets back" : isNeg ? "Owes" : "Settled"}
               </div>
-            </div>
+            </motion.div>
           );
         })}
       </div>
@@ -637,55 +1307,112 @@ function BalanceSummary({ people, total, getOwes, mode }) {
 
 // ═════════════════════════════════════════════════════════════
 //  COMPONENT: SettlementList
-//  Shows minimised transfer instructions or "all settled" state
 // ═════════════════════════════════════════════════════════════
 function SettlementList({ settlements, colorMap }) {
   if (!settlements.length) {
-    return (
-      <div className="pt-settled">
-        <div className="pt-settled-icon"><Check size={20} /></div>
-        <div className="pt-settled-title">All settled up!</div>
-        <div className="pt-settled-sub">No transfers needed — everyone's even.</div>
-      </div>
-    );
+    return <SettledBurst />;
   }
 
   return (
     <div>
       {settlements.map((s, i) => (
-        <div key={i} className="pt-settle">
-          {/* Debtor (sends) */}
-          <div className="pt-settle-side">
-            <div className="pt-av" style={{ background: colorMap[s.from] || AVATAR_COLORS[0] }}>
+        <motion.div
+          key={`${s.from}-${s.to}-${i}`}
+          className="kv-settle"
+          initial={{ opacity: 0, y: 6 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.32, delay: i * 0.05 }}
+        >
+          <div className="kv-settle-side">
+            <div className="kv-av" style={{ background: colorMap[s.from] || AVATAR_COLORS[0] }}>
               {init(s.from)}
             </div>
             <div>
-              <div className="pt-settle-sname">{s.from}</div>
-              <div className="pt-settle-verb">Sends</div>
+              <div className="kv-settle-sname">{s.from}</div>
+              <div className="kv-settle-verb">Sends</div>
             </div>
           </div>
 
-          {/* Arrow + amount */}
-          <div className="pt-settle-mid">
-            <div className="pt-settle-amt">£{s.amount.toFixed(2)}</div>
-            <div className="pt-settle-track">
-              <div className="pt-settle-line" />
-              <div className="pt-settle-arrow"><ArrowRight size={12} /></div>
+          <div className="kv-settle-mid">
+            <div className="kv-settle-amt">£{s.amount.toFixed(2)}</div>
+            <div className="kv-settle-track">
+              <motion.div
+                className="kv-settle-line"
+                initial={{ scaleX: 0 }}
+                animate={{ scaleX: 1 }}
+                transition={{ duration: 0.5, delay: 0.1 + i * 0.05, ease: [0.4, 0, 0.2, 1] }}
+              />
+              <motion.div
+                className="kv-settle-arrow"
+                initial={{ opacity: 0, x: -4 }}
+                animate={{ opacity: 1, x: 0 }}
+                transition={{ duration: 0.3, delay: 0.5 + i * 0.05 }}
+              >
+                <ArrowRight size={13} />
+              </motion.div>
             </div>
           </div>
 
-          {/* Creditor (receives) */}
-          <div className="pt-settle-side right">
-            <div className="pt-av" style={{ background: colorMap[s.to] || AVATAR_COLORS[1] }}>
+          <div className="kv-settle-side right">
+            <div className="kv-av" style={{ background: colorMap[s.to] || AVATAR_COLORS[1] }}>
               {init(s.to)}
             </div>
             <div style={{ textAlign: "right" }}>
-              <div className="pt-settle-sname">{s.to}</div>
-              <div className="pt-settle-verb">Receives</div>
+              <div className="kv-settle-sname">{s.to}</div>
+              <div className="kv-settle-verb">Receives</div>
             </div>
           </div>
-        </div>
+        </motion.div>
       ))}
+    </div>
+  );
+}
+
+// ═════════════════════════════════════════════════════════════
+//  COMPONENT: SettledBurst — celebration when no transfers needed
+// ═════════════════════════════════════════════════════════════
+function SettledBurst() {
+  return (
+    <div className="kv-settled">
+      <motion.div
+        className="kv-settled-icon-wrap"
+        initial={{ scale: 0.4, opacity: 0 }}
+        animate={{ scale: 1, opacity: 1 }}
+        transition={{ type: "spring", stiffness: 280, damping: 18, delay: 0.05 }}
+      >
+        <Check size={28} strokeWidth={2.6} />
+        {[0, 1, 2].map(i => (
+          <motion.div
+            key={i}
+            className="kv-settled-burst"
+            initial={{ scale: 0.6, opacity: 0.55 }}
+            animate={{ scale: 1.7 + i * 0.25, opacity: 0 }}
+            transition={{
+              duration: 1.4,
+              delay: 0.18 + i * 0.18,
+              repeat: Infinity,
+              repeatDelay: 1.6,
+              ease: "easeOut",
+            }}
+          />
+        ))}
+      </motion.div>
+      <motion.div
+        className="kv-settled-title"
+        initial={{ opacity: 0, y: 6 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.4, delay: 0.25 }}
+      >
+        All settled up!
+      </motion.div>
+      <motion.div
+        className="kv-settled-sub"
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        transition={{ duration: 0.4, delay: 0.4 }}
+      >
+        No transfers needed — everyone's even.
+      </motion.div>
     </div>
   );
 }
@@ -695,19 +1422,19 @@ function SettlementList({ settlements, colorMap }) {
 // ═════════════════════════════════════════════════════════════
 export default function App() {
   const [people, setPeople] = useState([
-    { id: 1, name: "Alice", paid: "", percent: 0 },
-    { id: 2, name: "Bob",   paid: "", percent: 0 },
+    { id: 1, name: "Alice", paid: "", percent: 0, minutes: 0 },
+    { id: 2, name: "Bob",   paid: "", percent: 0, minutes: 0 },
   ]);
-  const [amount,      setAmount]      = useState("");
-  const [description, setDescription] = useState("");
-  const [mode,        setMode]        = useState("equal");
-  const [toast,       setToast]       = useState({ show: false, msg: "" });
-  const [copied,      setCopied]      = useState(null);
-  const [darkMode,    setDarkMode]    = useState(true);
-  const [pos,         setPos]         = useState({ x: 0, y: 0 });
+  const [amount,          setAmount]          = useState("");
+  const [description,     setDescription]     = useState("");
+  const [mode,            setMode]            = useState("equal");
+  const [bookingDuration, setBookingDuration] = useState("");
+  const [toast,           setToast]           = useState({ show: false, msg: "" });
+  const [copied,          setCopied]          = useState(null);
+  const [pos,             setPos]             = useState({ x: 0, y: 0 });
   const shareRef = useRef();
 
-  // Inject all styles
+  // Inject styles
   useEffect(() => {
     const el = document.createElement("style");
     el.textContent = CSS;
@@ -715,12 +1442,11 @@ export default function App() {
     return () => document.head.removeChild(el);
   }, []);
 
-  // Sync body background with theme so no flash of light bg shows at page edges
+  // Body bg always dark for this revamp
   useEffect(() => {
-    document.body.style.background = darkMode
-      ? "radial-gradient(ellipse at 60% 0%, #0f1729 0%, #05080f 100%)"
-      : "#EEF2FA";
-  }, [darkMode]);
+    document.body.style.background =
+      "radial-gradient(ellipse at 60% 0%, #0a1410 0%, #060c08 60%, #040a06 100%)";
+  }, []);
 
   // Restore from shareable URL
   useEffect(() => {
@@ -728,31 +1454,40 @@ export default function App() {
     if (!data) return;
     try {
       const parsed = JSON.parse(atob(data));
-      const ppl = parsed.people.map(p => ({ ...p, percent: p.percent ?? 0 }));
+      const ppl = parsed.people.map(p => ({ ...p, percent: p.percent ?? 0, minutes: p.minutes ?? 0 }));
       setPeople(ppl);
       setAmount(parsed.amount);
       setDescription(parsed.description);
+      setBookingDuration(parsed.bookingDuration || "");
       setMode(parsed.mode || (ppl.some(p => Number(p.percent) > 0) ? "manual" : "equal"));
     } catch {}
   }, []);
 
-  // ── derived ────────────────────────────────────────────────
+  // ── derived ──────────────────────────────────────────────
   const total    = Number(amount) || 0;
   const totalPct = people.reduce((s, p) => s + (Number(p.percent) || 0), 0);
   const pctState = totalPct > 100.05 ? "over" : totalPct >= 99.95 ? "ok" : "partial";
 
-  const getOwes = (p) =>
-    mode === "equal"
-      ? total / people.length - (Number(p.paid) || 0)
-      : (total * (Number(p.percent) || 0)) / 100 - (Number(p.paid) || 0);
+  const timeDenominator = (() => {
+    const dur = Number(bookingDuration);
+    return dur > 0 ? dur : people.reduce((s, p) => s + (Number(p.minutes) || 0), 0);
+  })();
+
+  const getTimeShare = (p) =>
+    timeDenominator > 0 ? (total * (Number(p.minutes) || 0)) / timeDenominator : 0;
+
+  const getOwes = (p) => {
+    if (mode === "equal")  return total / people.length - (Number(p.paid) || 0);
+    if (mode === "manual") return (total * (Number(p.percent) || 0)) / 100 - (Number(p.paid) || 0);
+    return getTimeShare(p) - (Number(p.paid) || 0);
+  };
 
   const settlements = total > 0 ? calcSettlements(people, getOwes) : [];
 
-  // Map person name → avatar color (for SettlementList)
   const colorMap = {};
   people.forEach((p, i) => { colorMap[p.name] = AVATAR_COLORS[i % AVATAR_COLORS.length]; });
 
-  // ── ui helpers ─────────────────────────────────────────────
+  // ── ui helpers ───────────────────────────────────────────
   const showToast = (msg) => {
     setToast({ show: true, msg });
     setTimeout(() => setToast({ show: false, msg: "" }), 2200);
@@ -762,7 +1497,7 @@ export default function App() {
     setTimeout(() => setCopied(null), 2000);
   };
 
-  // ── people mutations ───────────────────────────────────────
+  // ── people mutations ─────────────────────────────────────
   const updatePerson = (i, field, val) => {
     const next = [...people];
     next[i] = { ...next[i], [field]: val };
@@ -770,7 +1505,13 @@ export default function App() {
   };
   const addPerson = () => {
     const name = DEFAULT_NAMES[people.length] || `Person ${people.length + 1}`;
-    setPeople([...people, { id: Date.now(), name, paid: "", percent: 0 }]);
+    const mins = mode === "time" ? (Number(bookingDuration) || 60) : 0;
+    setPeople([...people, { id: Date.now(), name, paid: "", percent: 0, minutes: mins }]);
+  };
+  const setAllFull = () => {
+    const dur = Number(bookingDuration) || 0;
+    if (!dur) return;
+    setPeople(people.map(p => ({ ...p, minutes: dur })));
   };
   const removeLast = () => {
     if (people.length <= 2) return;
@@ -784,10 +1525,34 @@ export default function App() {
     setPeople(people.map(p => (!p.percent || Number(p.percent) === 0) ? { ...p, percent: share } : p));
   };
 
-  // ── share actions ──────────────────────────────────────────
+  // ── sample data — for hero CTA ───────────────────────────
+  const loadSample = () => {
+    setMode("time");
+    setBookingDuration("90");
+    setAmount("48");
+    setDescription("Saturday padel");
+    setPeople([
+      { id: 1, name: "Alice", paid: "48", percent: 0, minutes: 90 },
+      { id: 2, name: "Bob",   paid: "",   percent: 0, minutes: 90 },
+      { id: 3, name: "Cara",  paid: "",   percent: 0, minutes: 60 },
+      { id: 4, name: "Dom",   paid: "",   percent: 0, minutes: 45 },
+    ]);
+    showToast("Loaded sample · Saturday padel");
+    setTimeout(() => {
+      const target = document.getElementById("kv-builder");
+      if (target) target.scrollIntoView({ behavior: "smooth", block: "start" });
+    }, 280);
+  };
+
+  // ── share actions ────────────────────────────────────────
   const copyText = () => {
-    let t = `${description || "Expense"}\nTotal: £${total.toFixed(2)}\n\n`;
-    people.forEach(p => { t += `${p.name}: £${getOwes(p).toFixed(2)}\n`; });
+    let t = `${description || (mode === "time" ? "Booking" : "Expense")}\nTotal: £${total.toFixed(2)}\n`;
+    if (mode === "time" && bookingDuration) t += `Duration: ${formatMins(Number(bookingDuration))}\n`;
+    t += "\n";
+    people.forEach(p => {
+      const played = mode === "time" ? ` (${formatMins(Number(p.minutes) || 0)})` : "";
+      t += `${p.name}${played}: £${getOwes(p).toFixed(2)}\n`;
+    });
     if (settlements.length) {
       t += "\nSettle up:\n";
       settlements.forEach(s => { t += `${s.from} → ${s.to}: £${s.amount.toFixed(2)}\n`; });
@@ -803,169 +1568,240 @@ export default function App() {
     });
   };
   const copyLink = () => {
-    const encoded = btoa(JSON.stringify({ people, amount, description, mode }));
+    const encoded = btoa(JSON.stringify({ people, amount, description, mode, bookingDuration }));
     navigator.clipboard.writeText(`${window.location.origin}?data=${encoded}`);
     flash("link"); showToast("Shareable link copied");
   };
 
-  // ── render ─────────────────────────────────────────────────
+  // ── render ───────────────────────────────────────────────
   return (
     <div
-      className={`pt${darkMode ? " dark" : ""}`}
-      onMouseMove={darkMode ? e => setPos({ x: e.clientX, y: e.clientY }) : undefined}
+      className="kv"
+      onMouseMove={e => setPos({ x: e.clientX, y: e.clientY })}
     >
-      {/* Flashlight — only visible in dark mode */}
-      {darkMode && (
-        <div
-          className="pt-flash"
-          style={{
-            background: `radial-gradient(circle at ${pos.x}px ${pos.y}px, rgba(92,103,245,0.11), transparent 180px)`,
-          }}
-        />
-      )}
+      <div className="kv-bg"   />
+      <div className="kv-dots" />
+      <div
+        className="kv-glow"
+        style={{
+          background: `radial-gradient(540px circle at ${pos.x}px ${pos.y}px, rgba(52,211,153,0.10), transparent 60%)`,
+        }}
+      />
 
-      {/* Theme toggle — top-right corner */}
-      <button className="pt-theme" onClick={() => setDarkMode(d => !d)} title="Toggle theme">
-        {darkMode ? <Sun size={16} /> : <Moon size={16} />}
-      </button>
+      <div className="kv-wrap">
+        <Hero onSample={loadSample} total={total} />
 
-      <div className="pt-wrap" style={{ position: "relative", zIndex: 1 }}>
+        <div id="kv-builder" />
 
-        {/* ── HEADER */}
-        <header className="pt-header">
-          <div className="pt-logo">
-            <div className="pt-mark">
-              <KvitMark size={21} />
-            </div>
-            <span className="pt-wordmark">Kvit</span>
+        <Reveal>
+          <p className="kv-lbl">{mode === "time" ? "01 · Booking" : "01 · Expense"}</p>
+          <ExpenseInput
+            description={description}       setDescription={setDescription}
+            amount={amount}                  setAmount={setAmount}
+            mode={mode}
+            bookingDuration={bookingDuration} setBookingDuration={setBookingDuration}
+          />
+        </Reveal>
+
+        <Reveal delay={0.05}>
+          <p className="kv-lbl">02 · Split mode</p>
+          <div className="kv-card">
+            <ModePicker mode={mode} setMode={setMode} />
           </div>
-          <p className="pt-tagline">Call it even.</p>
-        </header>
+        </Reveal>
 
-        {/* ── EXPENSE INPUT */}
-        <p className="pt-lbl">Expense</p>
-        <ExpenseInput
-          description={description} setDescription={setDescription}
-          amount={amount}           setAmount={setAmount}
-          mode={mode}               setMode={setMode}
-        />
-
-        {/* ── PEOPLE */}
-        <p className="pt-lbl">People</p>
-        <div className="pt-card">
-          {/* Table header */}
-          <div className={`pt-thead ${mode === "equal" ? "eq" : "man"}`}>
-            <span>Name</span>
-            <span>Paid</span>
-            {mode === "manual" && <span>%</span>}
-            <span>Balance</span>
-          </div>
-
-          {people.map((p, i) => (
-            <PersonRow
-              key={p.id}
-              person={p}
-              index={i}
-              mode={mode}
-              owes={getOwes(p)}
-              onUpdate={(field, val) => updatePerson(i, field, val)}
-            />
-          ))}
-
-          {/* Percent progress — manual mode */}
-          {mode === "manual" && (
-            <div className="pt-pct">
-              <span
-                className="pt-pct-lbl"
-                style={{
-                  color: pctState === "over" ? "var(--red)"
-                       : pctState === "ok"   ? "var(--green)"
-                       :                       "var(--text-2)",
-                }}
-              >
-                {pctState === "over" ? "Over 100%"
-                : pctState === "ok"  ? "Splits perfectly"
-                :                     `${(100 - totalPct).toFixed(1)}% left`}
-              </span>
-              <div className="pt-pct-track">
-                <div className={`pt-pct-fill ${pctState}`} style={{ width: `${Math.min(totalPct, 100)}%` }} />
+        <Reveal delay={0.1}>
+          <p className="kv-lbl">03 · People</p>
+          <div className="kv-card">
+            {mode !== "time" && (
+              <div className={`kv-thead ${mode === "equal" ? "eq" : "man"}`}>
+                <span>Name</span>
+                <span>Paid</span>
+                {mode === "manual" && <span>%</span>}
+                <span>Balance</span>
               </div>
-              <span className="pt-pct-num">{totalPct.toFixed(1)}%</span>
-            </div>
-          )}
+            )}
 
-          {/* Footer buttons */}
-          <div className="pt-row-btns">
+            {mode === "time" && !Number(bookingDuration) && (
+              <div className="kv-dur-hint">
+                <Clock size={14} />
+                Set the session duration above to enable time sliders
+              </div>
+            )}
+
+            <AnimatePresence initial={false}>
+              {people.map((p, i) =>
+                mode === "time" ? (
+                  <TimePersonRow
+                    key={p.id}
+                    person={p}
+                    index={i}
+                    owes={getOwes(p)}
+                    timeShare={getTimeShare(p)}
+                    bookingDuration={bookingDuration}
+                    onUpdate={(field, val) => updatePerson(i, field, val)}
+                  />
+                ) : (
+                  <PersonRow
+                    key={p.id}
+                    person={p}
+                    index={i}
+                    mode={mode}
+                    owes={getOwes(p)}
+                    onUpdate={(field, val) => updatePerson(i, field, val)}
+                  />
+                )
+              )}
+            </AnimatePresence>
+
             {mode === "manual" && (
-              <button className="pt-btn-ghost" onClick={fillRemaining}>⚡ Auto-fill %</button>
+              <div className="kv-pct">
+                <span
+                  className="kv-pct-lbl"
+                  style={{
+                    color: pctState === "over" ? "var(--red)"
+                         : pctState === "ok"   ? "var(--green)"
+                         :                       "var(--text-2)",
+                  }}
+                >
+                  {pctState === "over" ? "Over 100%"
+                  : pctState === "ok"  ? "Splits perfectly"
+                  :                     `${(100 - totalPct).toFixed(1)}% left`}
+                </span>
+                <div className="kv-pct-track">
+                  <motion.div
+                    className={`kv-pct-fill ${pctState}`}
+                    animate={{ width: `${Math.min(totalPct, 100)}%` }}
+                    transition={{ duration: 0.4, ease: [0.4, 0, 0.2, 1] }}
+                  />
+                </div>
+                <span className="kv-pct-num">{totalPct.toFixed(1)}%</span>
+              </div>
             )}
-            {people.length > 2 && (
-              <button className="pt-btn-ghost" onClick={removeLast}>− Remove</button>
-            )}
-            <button className="pt-btn-pri" onClick={addPerson}>
-              <Plus size={14} /> Add Person
-            </button>
-          </div>
-        </div>
 
-        {/* ── BALANCE SUMMARY (when amount is entered) */}
-        {total > 0 && (
-          <>
-            <p className="pt-lbl">Summary</p>
-            <BalanceSummary people={people} total={total} getOwes={getOwes} mode={mode} />
-          </>
-        )}
-
-        {/* ── SETTLEMENTS (who pays whom) */}
-        {total > 0 && (
-          <>
-            <p className="pt-lbl">Settle Up</p>
-            <div className="pt-card">
-              <SettlementList settlements={settlements} colorMap={colorMap} />
+            <div className="kv-row-btns">
+              {mode === "manual" && (
+                <button className="kv-btn-ghost" onClick={fillRemaining}>
+                  <Sparkles size={13} /> Auto-fill %
+                </button>
+              )}
+              {mode === "time" && Number(bookingDuration) > 0 && (
+                <button className="kv-btn-ghost" onClick={setAllFull}>
+                  <Sparkles size={13} /> Set all full
+                </button>
+              )}
+              {people.length > 2 && (
+                <button className="kv-btn-ghost" onClick={removeLast}>− Remove</button>
+              )}
+              <button className="kv-btn-pri" onClick={addPerson}>
+                <Plus size={14} /> Add Person
+              </button>
             </div>
-          </>
-        )}
+          </div>
+        </Reveal>
 
-        {/* ── SHARE ACTIONS */}
-        <p className="pt-lbl">Share</p>
-        <div className="pt-actions">
-          <button className={`pt-act${copied === "text"  ? " done" : ""}`} onClick={copyText}>
-            {copied === "text"  ? <Check size={14} /> : <FileText   size={14} />} Text
-          </button>
-          <button className={`pt-act${copied === "image" ? " done" : ""}`} onClick={copyImage}>
-            {copied === "image" ? <Check size={14} /> : <ImageIcon   size={14} />} Image
-          </button>
-          <button className={`pt-act${copied === "link"  ? " done" : ""}`} onClick={copyLink}>
-            {copied === "link"  ? <Check size={14} /> : <Link        size={14} />} Share Link
-          </button>
-        </div>
+        <AnimatePresence>
+          {mode === "time" && total > 0 && Number(bookingDuration) > 0 && (
+            <motion.div
+              key="timeline"
+              initial={{ opacity: 0, y: 16 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -8 }}
+              transition={{ duration: 0.4 }}
+            >
+              <p className="kv-lbl">04 · Timeline</p>
+              <ParticipationTimeline
+                people={people}
+                bookingDuration={bookingDuration}
+                total={total}
+              />
+            </motion.div>
+          )}
+        </AnimatePresence>
 
+        <AnimatePresence>
+          {total > 0 && (
+            <motion.div
+              key="summary"
+              initial={{ opacity: 0, y: 16 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0 }}
+              transition={{ duration: 0.4 }}
+            >
+              <p className="kv-lbl">{mode === "time" ? "05" : "04"} · Summary</p>
+              <BalanceSummary
+                people={people}
+                total={total}
+                getOwes={getOwes}
+                mode={mode}
+                bookingDuration={bookingDuration}
+              />
+
+              <p className="kv-lbl">{mode === "time" ? "06" : "05"} · Settle up</p>
+              <div className="kv-card">
+                <SettlementList settlements={settlements} colorMap={colorMap} />
+              </div>
+            </motion.div>
+          )}
+        </AnimatePresence>
+
+        <Reveal delay={0.05}>
+          <p className="kv-lbl">{total > 0 ? (mode === "time" ? "07" : "06") : "Last"} · Share</p>
+          <div className="kv-actions">
+            <motion.button
+              className={`kv-act${copied === "text"  ? " done" : ""}`}
+              onClick={copyText}
+              whileTap={{ scale: 0.96 }}
+            >
+              {copied === "text" ? <Check size={14} /> : <FileText size={14} />} Text
+            </motion.button>
+            <motion.button
+              className={`kv-act${copied === "image" ? " done" : ""}`}
+              onClick={copyImage}
+              whileTap={{ scale: 0.96 }}
+            >
+              {copied === "image" ? <Check size={14} /> : <ImageIcon size={14} />} Image
+            </motion.button>
+            <motion.button
+              className={`kv-act${copied === "link"  ? " done" : ""}`}
+              onClick={copyLink}
+              whileTap={{ scale: 0.96 }}
+            >
+              {copied === "link" ? <Check size={14} /> : <LinkIcon size={14} />} Link
+            </motion.button>
+          </div>
+        </Reveal>
+
+        <footer className="kv-footer">
+          KVIT · CALL IT EVEN ·{" "}
+          <a href="https://github.com/OElhwry/Kvit" target="_blank" rel="noreferrer">GITHUB</a>
+        </footer>
       </div>
 
-      {/* ── TOAST */}
-      <div className={`pt-toast${toast.show ? " up" : ""}`}>
-        <Check size={13} color="var(--green)" />
+      {/* Toast */}
+      <div className={`kv-toast${toast.show ? " up" : ""}`}>
+        <Check size={13} color="var(--primary)" />
         {toast.msg}
       </div>
 
-      {/* ── HIDDEN SHARE CARD (image capture) */}
-      <div className="pt-hidden">
-        <div className="pt-share" ref={shareRef}>
-          <div className="pt-share-hdr">
-            <div className="pt-share-mark"><KvitMark size={17} /></div>
+      {/* Hidden share card (image capture) */}
+      <div className="kv-hidden">
+        <div className="kv-share" ref={shareRef}>
+          <div className="kv-share-hdr">
+            <div className="kv-share-mark"><KvitMark size={18} /></div>
             <div>
-              <div className="pt-share-brand">Kvit</div>
-              <div className="pt-share-desc">{description || "Expense"}</div>
+              <div className="kv-share-brand">Kvit</div>
+              <div className="kv-share-desc">{description || "Expense"}</div>
             </div>
           </div>
-          <div className="pt-share-amount">£{total.toFixed(2)}</div>
-          <div className="pt-share-div" />
+          <div className="kv-share-amount">£{total.toFixed(2)}</div>
+          <div className="kv-share-div" />
           {people.map((p, i) => {
             const owes = getOwes(p);
             return (
-              <div key={i} className="pt-share-row">
-                <span className="pt-share-person">{p.name}</span>
-                <span className={owes > 0.005 ? "pt-share-neg" : "pt-share-pos"}>
+              <div key={i} className="kv-share-row">
+                <span className="kv-share-person">{p.name}</span>
+                <span className={owes > 0.005 ? "kv-share-neg" : "kv-share-pos"}>
                   {owes > 0.005 ? "−" : "+"}£{fmt(owes)}
                 </span>
               </div>
@@ -973,11 +1809,11 @@ export default function App() {
           })}
           {settlements.length > 0 && (
             <>
-              <div className="pt-share-div" />
+              <div className="kv-share-div" />
               {settlements.map((s, i) => (
-                <div key={i} className="pt-share-row">
-                  <span className="pt-share-person">{s.from} → {s.to}</span>
-                  <span className="pt-share-neg">£{s.amount.toFixed(2)}</span>
+                <div key={i} className="kv-share-row">
+                  <span className="kv-share-person">{s.from} → {s.to}</span>
+                  <span className="kv-share-neg">£{s.amount.toFixed(2)}</span>
                 </div>
               ))}
             </>
