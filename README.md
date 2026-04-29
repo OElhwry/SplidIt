@@ -1,5 +1,5 @@
 <h1 align="center">
-  <a href="https://oelhwry.github.io/SplidIt/">
+  <a href="https://splidit.co.uk/">
     <img src="split-expense-app/public/splidit.png" width="64" alt="SplidIt">
   </a>
   <br>
@@ -13,7 +13,7 @@
 </p>
 
 <p align="center">
-  <a href="https://oelhwry.github.io/SplidIt/"><img src="https://img.shields.io/badge/live-oelhwry.github.io%2FSplidIt-34d399?style=for-the-badge" alt="Live"></a>
+  <a href="https://splidit.co.uk/"><img src="https://img.shields.io/badge/live-oelhwry.github.io%2FSplidIt-34d399?style=for-the-badge" alt="Live"></a>
   <img src="https://img.shields.io/badge/version-1.0.0-6ee7b7?style=for-the-badge" alt="Version 1.0.0">
   <img src="https://img.shields.io/badge/no%20account-required-10b981?style=for-the-badge" alt="No account required">
   <img src="https://img.shields.io/badge/license-MIT-737373?style=for-the-badge" alt="MIT">
@@ -257,7 +257,7 @@ This project — every line of JSX, the calculation logic, the CSS, the motion c
 ---
 
 <p align="center">
-  <a href="https://oelhwry.github.io/SplidIt/"><b>oelhwry.github.io/SplidIt</b></a> ·
+  <a href="https://splidit.co.uk/"><b>oelhwry.github.io/SplidIt</b></a> ·
   <a href="https://github.com/OElhwry/SplidIt"><b>GitHub</b></a>
 </p>
 
