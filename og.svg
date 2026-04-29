@@ -1,0 +1,80 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 630" width="1200" height="630">
+  <defs>
+    <radialGradient id="rg1" cx="1020" cy="63" r="680" gradientUnits="userSpaceOnUse">
+      <stop offset="0%" stop-color="#34d399" stop-opacity="0.22"/>
+      <stop offset="100%" stop-color="#34d399" stop-opacity="0"/>
+    </radialGradient>
+    <radialGradient id="rg2" cx="60" cy="598" r="620" gradientUnits="userSpaceOnUse">
+      <stop offset="0%" stop-color="#10b981" stop-opacity="0.14"/>
+      <stop offset="100%" stop-color="#10b981" stop-opacity="0"/>
+    </radialGradient>
+    <linearGradient id="logoGrad" x1="88" y1="76" x2="166" y2="154" gradientUnits="userSpaceOnUse">
+      <stop offset="0%" stop-color="#34d399"/>
+      <stop offset="50%" stop-color="#10b981"/>
+      <stop offset="100%" stop-color="#047857"/>
+    </linearGradient>
+    <pattern id="dotp" x="0" y="0" width="30" height="30" patternUnits="userSpaceOnUse">
+      <circle cx="15" cy="15" r="1.2" fill="#34d399" fill-opacity="0.08"/>
+    </pattern>
+  </defs>
+
+  <!-- Background -->
+  <rect width="1200" height="630" fill="#060c08"/>
+  <rect width="1200" height="630" fill="url(#rg1)"/>
+  <rect width="1200" height="630" fill="url(#rg2)"/>
+  <rect width="1200" height="630" fill="url(#dotp)" opacity="0.9"/>
+
+  <!-- Logo mark: 78x78 rounded square -->
+  <rect x="88" y="76" width="78" height="78" rx="22" fill="url(#logoGrad)"/>
+  <!-- Logo mark inner — nested SVG with viewBox matches og.html exactly -->
+  <svg x="88" y="76" width="78" height="78" viewBox="0 0 38 38">
+    <rect x="0"     y="9.92" width="15.46" height="6.08" rx="3.04" fill="rgba(255,255,255,0.96)"/>
+    <rect x="22.54" y="9.92" width="15.46" height="6.08" rx="3.04" fill="rgba(255,255,255,0.96)"/>
+    <rect x="0"     y="22"   width="38"    height="6.08" rx="3.04" fill="rgba(255,255,255,0.96)"/>
+  </svg>
+
+  <!-- Brand name -->
+  <text x="186" y="120"
+        font-family="-apple-system,BlinkMacSystemFont,'Segoe UI',Helvetica,Arial,sans-serif"
+        font-size="36" font-weight="800" fill="#f0fdf4" letter-spacing="-1">SplidIt</text>
+  <!-- Brand tagline -->
+  <text x="186" y="141"
+        font-family="ui-monospace,Menlo,Consolas,'Courier New',monospace"
+        font-size="15" fill="#34d399" fill-opacity="0.78" letter-spacing="2">~ call it even ~</text>
+
+  <!-- Main headline line 1 -->
+  <text x="88" y="308"
+        font-family="-apple-system,BlinkMacSystemFont,'Segoe UI',Helvetica,Arial,sans-serif"
+        font-size="100" font-weight="800" fill="#f0fdf4" letter-spacing="-3" opacity="0.97">Split bills.</text>
+  <!-- Main headline line 2 — emerald -->
+  <text x="88" y="412"
+        font-family="-apple-system,BlinkMacSystemFont,'Segoe UI',Helvetica,Arial,sans-serif"
+        font-size="100" font-weight="800" fill="#34d399" letter-spacing="-3">Settle in seconds.</text>
+
+  <!-- Sub description -->
+  <text x="88" y="456"
+        font-family="-apple-system,BlinkMacSystemFont,'Segoe UI',Helvetica,Arial,sans-serif"
+        font-size="22" fill="#e6f4ec" fill-opacity="0.62">No account. Three split modes. Minimum-transactions settlement. All in the browser.</text>
+
+  <!-- Footer pills -->
+  <rect x="88" y="498" width="148" height="40" rx="20" fill="#34d399" fill-opacity="0.1" stroke="#34d399" stroke-opacity="0.3" stroke-width="1"/>
+  <circle cx="110" cy="518" r="4" fill="#34d399"/>
+  <text x="122" y="524"
+        font-family="-apple-system,BlinkMacSystemFont,'Segoe UI',Helvetica,Arial,sans-serif"
+        font-size="16" font-weight="600" fill="#e6f4ec" fill-opacity="0.92">No account</text>
+
+  <rect x="248" y="498" width="148" height="40" rx="20" fill="#34d399" fill-opacity="0.1" stroke="#34d399" stroke-opacity="0.3" stroke-width="1"/>
+  <text x="272" y="524"
+        font-family="-apple-system,BlinkMacSystemFont,'Segoe UI',Helvetica,Arial,sans-serif"
+        font-size="16" font-weight="600" fill="#e6f4ec" fill-opacity="0.92">3 split modes</text>
+
+  <rect x="408" y="498" width="258" height="40" rx="20" fill="#34d399" fill-opacity="0.1" stroke="#34d399" stroke-opacity="0.3" stroke-width="1"/>
+  <text x="432" y="524"
+        font-family="-apple-system,BlinkMacSystemFont,'Segoe UI',Helvetica,Arial,sans-serif"
+        font-size="16" font-weight="600" fill="#e6f4ec" fill-opacity="0.92">By Time · padel, courts, hourly</text>
+
+  <!-- URL bottom right -->
+  <text x="1112" y="524"
+        font-family="ui-monospace,Menlo,Consolas,'Courier New',monospace"
+        font-size="17" fill="#6ee7b7" fill-opacity="0.68" letter-spacing="1" text-anchor="end">splidit.co.uk</text>
+</svg>
