@@ -1,5 +1,5 @@
 <h1 align="center">
-  <img src="og.svg" width="800" alt="SplidIt">
+  <img src="splidit\public\og.png" width="800" alt="SplidIt">
   <br>
   SplidIt
 </h1>
