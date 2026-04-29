@@ -1,5 +1,7 @@
 <h1 align="center">
+  <a href="https://splidit.co.uk/">
   <img src="splidit\public\og.png" width="800" alt="SplidIt">
+  </a>
   <br>
   SplidIt
 </h1>
